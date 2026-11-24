@@ -19,6 +19,14 @@ Route::get('/demo-accounts', function () {
     ]);
 });
 
+// Owner API Endpoints (untuk Frontend Standalone)
+Route::prefix('owner')->group(function () {
+    Route::get('/dashboard', [OwnerController::class, 'dashboard']);
+    Route::get('/produk', [OwnerController::class, 'produk']);
+    Route::post('/produk', [OwnerController::class, 'storeProduk']);
+    Route::get('/produk/{product}/riwayat', [OwnerController::class, 'riwayatStok']);
+});
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Owner - Madam Dimsum</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#C8372D',
+                            redHover: '#B22F26',
+                            redPink: '#E9A9A1',
+                            dark: '#2A211C',
+                            menuText: '#CDBFB3',
+                            lightBg: '#FBF7F2',
+                            border: '#EADFD3',
+                            secondary: '#8A7B70',
+                            safe: '#2E8B57',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/owner.css">
+</head>
+<body class="min-h-screen flex antialiased bg-[#FBF7F2] text-[#2A211C]">
+
+    <!-- ==================== SIDEBAR OWNER (220px) ==================== -->
+    <aside class="w-[220px] bg-brand-dark flex flex-col justify-between shrink-0 min-h-screen text-white select-none fixed left-0 top-0 bottom-0 z-20">
+        <div>
+            <!-- Header Brand / Logo -->
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
+                <div class="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center font-bold text-white text-base shadow-sm">
+                    M
+                </div>
+                <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
+            </div>
+
+            <!-- Menu Navigasi Sesuai PRD -->
+            <nav class="p-3 space-y-1 text-[13px] font-medium">
+                <!-- 1. Dashboard -->
+                <a href="dashboard.html" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-brand-red text-white font-semibold shadow-sm transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- 2. Produk & Stok -->
+                <a href="produk.html" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    <span>Produk & Stok</span>
+                </a>
+
+                <!-- 3. Pemasok -->
+                <a href="javascript:void(0)" onclick="alert('Menu Pemasok (FR-25): Mengelola pemasok & kirim pesanan via WhatsApp.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span>Pemasok</span>
+                </a>
+
+                <!-- 4. Laporan -->
+                <a href="javascript:void(0)" onclick="alert('Menu Laporan Penjualan (FR-27): Ekspor data transaksi ke Excel & PDF.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Laporan</span>
+                </a>
+
+                <!-- 5. Riwayat Transaksi -->
+                <a href="javascript:void(0)" onclick="alert('Menu Riwayat Transaksi (FR-28): Mencari rincian transaksi kasir & batalkan nota (BR-06).')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Riwayat Transaksi</span>
+                </a>
+
+                <!-- 6. Pengguna -->
+                <a href="javascript:void(0)" onclick="alert('Menu Pengguna (FR-29): Kelola hak akses akun Owner, Kasir, dan Dapur.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>Pengguna</span>
+                </a>
+
+                <!-- 7. Pencadangan -->
+                <a href="javascript:void(0)" onclick="alert('Menu Pencadangan (FR-30): Cadangkan database sekarang atau atur jadwal otomatis jam 02:00.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                    </svg>
+                    <span>Pencadangan</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5 text-[11px] text-stone-500">
+            DimsumKu v2 &middot; Tim Astroboys
+        </div>
+    </aside>
+
+    <!-- ==================== AREA UTAMA KANAN ==================== -->
+    <div class="ml-[220px] flex-1 flex flex-col min-w-0">
+
+        <!-- Top Header Bar -->
+        <header class="h-16 bg-brand-lightBg border-b border-[#EADFD3] px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight">Dashboard</h1>
+
+            <div class="relative">
+                <button type="button" onclick="toggleUserDropdown()" 
+                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#EADFD3] bg-white text-xs font-semibold text-stone-800 hover:bg-stone-50 shadow-sm transition">
+                    <span>Owner</span>
+                    <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#EADFD3] py-1 z-30">
+                    <div class="px-4 py-2 border-b border-stone-100">
+                        <p class="text-xs font-bold text-stone-900">Madam Owner</p>
+                        <p class="text-[11px] text-stone-500">Peran: Owner</p>
+                    </div>
+                    <a href="../index.html" class="block px-4 py-2 text-xs font-semibold text-brand-red hover:bg-red-50 transition">
+                        Keluar
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 space-y-6 max-w-7xl">
+
+            <!-- 4 Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
+                    <p class="text-xs font-semibold text-stone-500 mb-1">Penjualan Hari Ini</p>
+                    <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">Rp 1.075.000</h3>
+                    <p class="text-[11px] font-medium text-emerald-600 mt-2">&uarr; +12% dari kemarin</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
+                    <p class="text-xs font-semibold text-stone-500 mb-1">Pendapatan Bulan Ini</p>
+                    <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">Rp 38.420.000</h3>
+                    <p class="text-[11px] font-medium text-stone-500 mt-2">1.240 transaksi</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
+                    <p class="text-xs font-semibold text-stone-500 mb-1">Stok Menipis</p>
+                    <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">3 produk</h3>
+                    <p class="text-[11px] font-semibold text-brand-red mt-2">perlu di-restock</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
+                    <p class="text-xs font-semibold text-stone-500 mb-1">Produk Terlaris</p>
+                    <h3 class="text-xl font-extrabold text-stone-900 tracking-tight">Siomay Ayam</h3>
+                    <p class="text-[11px] font-medium text-stone-500 mt-2">74 porsi terjual</p>
+                </div>
+            </div>
+
+            <!-- Bagian Tengah (Grafik & Restock) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Grafik Batang 7 Hari -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-6">
+                        <h4 class="text-sm font-bold text-stone-900">Penjualan 7 Hari Terakhir</h4>
+                        <span class="text-xs font-medium text-stone-400">Total sepekan</span>
+                    </div>
+                    <div class="h-48 flex items-end justify-between gap-3 sm:gap-6 pt-4 px-2 sm:px-6 border-b border-stone-100">
+                        <div class="flex-1 flex flex-col items-center h-full justify-end">
+                            <div style="height: 48%;" class="w-full max-w-[36px] bg-brand-redPink rounded-t-md"></div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center h-full justify-end">
+                            <div style="height: 36%;" class="w-full max-w-[36px] bg-brand-redPink rounded-t-md"></div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center h-full justify-end">
+                            <div style="height: 60%;" class="w-full max-w-[36px] bg-brand-redPink rounded-t-md"></div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center h-full justify-end">
+                            <div style="height: 52%;" class="w-full max-w-[36px] bg-brand-redPink rounded-t-md"></div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center h-full justify-end">
+                            <div style="height: 70%;" class="w-full max-w-[36px] bg-brand-redPink rounded-t-md"></div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center h-full justify-end">
+                            <div style="height: 100%;" class="w-full max-w-[36px] bg-brand-red rounded-t-md shadow-sm"></div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center h-full justify-end">
+                            <div style="height: 83%;" class="w-full max-w-[36px] bg-brand-redPink rounded-t-md"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between px-2 sm:px-6 pt-3 text-xs font-medium text-stone-500">
+                        <span class="flex-1 text-center">Sen</span>
+                        <span class="flex-1 text-center">Sel</span>
+                        <span class="flex-1 text-center">Rab</span>
+                        <span class="flex-1 text-center">Kam</span>
+                        <span class="flex-1 text-center">Jum</span>
+                        <span class="flex-1 text-center font-bold text-brand-red">Sab</span>
+                        <span class="flex-1 text-center">Min</span>
+                    </div>
+                </div>
+
+                <!-- Riwayat Pemesanan / Restock -->
+                <div class="bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-sm font-bold text-stone-900">Riwayat Pemesanan</h4>
+                            <span class="text-[11px] font-semibold text-brand-red bg-red-50 px-2 py-0.5 rounded-full">Perlu Dipesan</span>
+                        </div>
+                        <div class="space-y-3.5 divide-y divide-stone-100">
+                            <div class="pt-3 first:pt-0 flex items-center justify-between text-xs">
+                                <span class="font-semibold text-stone-800">Hakau Udang</span>
+                                <span class="text-brand-red font-medium">sisa 4 &middot; <b class="font-bold">pesan 20</b></span>
+                            </div>
+                            <div class="pt-3 flex items-center justify-between text-xs">
+                                <span class="font-semibold text-stone-800">Bakpao Coklat</span>
+                                <span class="text-brand-red font-medium">sisa 6 &middot; <b class="font-bold">pesan 20</b></span>
+                            </div>
+                            <div class="pt-3 flex items-center justify-between text-xs">
+                                <span class="font-semibold text-stone-800">Lumpia Udang</span>
+                                <span class="text-brand-red font-medium">sisa 2 &middot; <b class="font-bold">pesan 20</b></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-6">
+                        <a href="produk.html" class="block w-full text-center py-2.5 px-4 rounded-xl border border-[#EADFD3] text-xs font-semibold text-stone-700 hover:bg-stone-50 transition shadow-sm">
+                            Buka Daftar Pemasok
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaksi Terbaru -->
+            <div class="bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-[#EADFD3] flex items-center justify-between">
+                    <h4 class="text-sm font-bold text-stone-900">Transaksi Terbaru</h4>
+                    <span class="text-xs text-stone-400">Pembaruan otomatis dari kasir</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+                            <tr>
+                                <th class="py-3 px-6">No. Transaksi</th>
+                                <th class="py-3 px-6">Waktu</th>
+                                <th class="py-3 px-6">Kasir</th>
+                                <th class="py-3 px-6 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                            <tr class="hover:bg-stone-50/60 transition">
+                                <td class="py-3.5 px-6 font-bold text-stone-900">TRX-0062</td>
+                                <td class="py-3.5 px-6 text-stone-500">14:32</td>
+                                <td class="py-3.5 px-6">Rina</td>
+                                <td class="py-3.5 px-6 text-right font-bold text-stone-900">Rp 48.000</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/60 transition">
+                                <td class="py-3.5 px-6 font-bold text-stone-900">TRX-0061</td>
+                                <td class="py-3.5 px-6 text-stone-500">14:20</td>
+                                <td class="py-3.5 px-6">Rina</td>
+                                <td class="py-3.5 px-6 text-right font-bold text-stone-900">Rp 32.000</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/60 transition">
+                                <td class="py-3.5 px-6 font-bold text-stone-900">TRX-0060</td>
+                                <td class="py-3.5 px-6 text-stone-500">13:50</td>
+                                <td class="py-3.5 px-6">Rina</td>
+                                <td class="py-3.5 px-6 text-right font-bold text-stone-900">Rp 64.000</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/60 transition">
+                                <td class="py-3.5 px-6 font-bold text-stone-900">TRX-0059</td>
+                                <td class="py-3.5 px-6 text-stone-500">12:15</td>
+                                <td class="py-3.5 px-6">Rina</td>
+                                <td class="py-3.5 px-6 text-right font-bold text-stone-900">Rp 28.000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="js/owner.js"></script>
+</body>
+</html>
+

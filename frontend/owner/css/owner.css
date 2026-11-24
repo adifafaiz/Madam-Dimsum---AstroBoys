@@ -1,0 +1,21 @@
+/* Owner Styling */
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #EADFD3;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #CDBFB3;
+}
+

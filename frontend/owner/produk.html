@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produk & Stok - Owner - Madam Dimsum</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#C8372D',
+                            redHover: '#B22F26',
+                            redPink: '#E9A9A1',
+                            dark: '#2A211C',
+                            menuText: '#CDBFB3',
+                            lightBg: '#FBF7F2',
+                            border: '#EADFD3',
+                            secondary: '#8A7B70',
+                            safe: '#2E8B57',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/owner.css">
+</head>
+<body class="min-h-screen flex antialiased bg-[#FBF7F2] text-[#2A211C]">
+
+    <!-- ==================== SIDEBAR OWNER (220px) ==================== -->
+    <aside class="w-[220px] bg-brand-dark flex flex-col justify-between shrink-0 min-h-screen text-white select-none fixed left-0 top-0 bottom-0 z-20">
+        <div>
+            <!-- Header Brand / Logo -->
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
+                <div class="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center font-bold text-white text-base shadow-sm">
+                    M
+                </div>
+                <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
+            </div>
+
+            <!-- Menu Navigasi Sesuai PRD -->
+            <nav class="p-3 space-y-1 text-[13px] font-medium">
+                <!-- 1. Dashboard -->
+                <a href="dashboard.html" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- 2. Produk & Stok (Active) -->
+                <a href="produk.html" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-brand-red text-white font-semibold shadow-sm transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    <span>Produk & Stok</span>
+                </a>
+
+                <!-- 3. Pemasok -->
+                <a href="javascript:void(0)" onclick="alert('Menu Pemasok (FR-25): Mengelola pemasok & kirim pesanan via WhatsApp.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span>Pemasok</span>
+                </a>
+
+                <!-- 4. Laporan -->
+                <a href="javascript:void(0)" onclick="alert('Menu Laporan Penjualan (FR-27): Ekspor data transaksi ke Excel & PDF.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Laporan</span>
+                </a>
+
+                <!-- 5. Riwayat Transaksi -->
+                <a href="javascript:void(0)" onclick="alert('Menu Riwayat Transaksi (FR-28): Mencari rincian transaksi kasir & batalkan nota (BR-06).')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Riwayat Transaksi</span>
+                </a>
+
+                <!-- 6. Pengguna -->
+                <a href="javascript:void(0)" onclick="alert('Menu Pengguna (FR-29): Kelola hak akses akun Owner, Kasir, dan Dapur.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>Pengguna</span>
+                </a>
+
+                <!-- 7. Pencadangan -->
+                <a href="javascript:void(0)" onclick="alert('Menu Pencadangan (FR-30): Cadangkan database sekarang atau atur jadwal otomatis jam 02:00.')"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                    </svg>
+                    <span>Pencadangan</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5 text-[11px] text-stone-500">
+            DimsumKu v2 &middot; Tim Astroboys
+        </div>
+    </aside>
+
+    <!-- ==================== AREA UTAMA KANAN ==================== -->
+    <div class="ml-[220px] flex-1 flex flex-col min-w-0">
+
+        <!-- Top Header Bar -->
+        <header class="h-16 bg-brand-lightBg border-b border-[#EADFD3] px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight">Produk & Stok</h1>
+
+            <div class="relative">
+                <button type="button" onclick="toggleUserDropdown()" 
+                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#EADFD3] bg-white text-xs font-semibold text-stone-800 hover:bg-stone-50 shadow-sm transition">
+                    <span>Owner</span>
+                    <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#EADFD3] py-1 z-30">
+                    <div class="px-4 py-2 border-b border-stone-100">
+                        <p class="text-xs font-bold text-stone-900">Madam Owner</p>
+                        <p class="text-[11px] text-stone-500">Peran: Owner</p>
+                    </div>
+                    <a href="../index.html" class="block px-4 py-2 text-xs font-semibold text-brand-red hover:bg-red-50 transition">
+                        Keluar
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 space-y-6 max-w-7xl">
+
+            <!-- Filter & Action Bar Sesuai Mockup Frame 2 -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-3 flex-1">
+                    <div class="relative w-full sm:w-64">
+                        <input 
+                            type="text" 
+                            id="searchProduct"
+                            oninput="filterProducts()"
+                            placeholder="Cari produk..." 
+                            class="w-full pl-9 pr-4 py-2 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red shadow-sm"
+                        >
+                        <svg class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+
+                    <div class="relative">
+                        <select 
+                            id="filterCategory"
+                            onchange="filterProducts()"
+                            class="appearance-none bg-white border border-[#EADFD3] rounded-lg pl-3.5 pr-8 py-2 text-xs font-medium text-stone-700 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red shadow-sm cursor-pointer"
+                        >
+                            <option value="Semua">Semua Kategori</option>
+                            <option value="Dimsum Kukus">Dimsum Kukus</option>
+                            <option value="Dimsum Goreng">Dimsum Goreng</option>
+                            <option value="Bakpao">Bakpao</option>
+                        </select>
+                        <svg class="w-3.5 h-3.5 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button 
+                        type="button" 
+                        onclick="alert('Fitur Catat Stok Masuk (FR-24): Menambah stok dari kiriman pemasok.')"
+                        class="px-3.5 py-2 rounded-lg border border-[#EADFD3] bg-white text-xs font-semibold text-stone-700 hover:bg-stone-50 shadow-sm transition"
+                    >
+                        + Catat Stok Masuk
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="openModalTambah()"
+                        class="px-4 py-2 rounded-lg bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition"
+                    >
+                        + Tambah Produk
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabel Produk & Stok (Frame 2) -->
+            <div class="bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+                            <tr>
+                                <th class="py-3.5 px-6">Produk</th>
+                                <th class="py-3.5 px-6">Satuan</th>
+                                <th class="py-3.5 px-6">Harga</th>
+                                <th class="py-3.5 px-6">Stok</th>
+                                <th class="py-3.5 px-6">Status</th>
+                                <th class="py-3.5 px-6 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody" class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                            <!-- Di-render oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="tableFooterInfo" class="p-4 border-t border-[#EADFD3] bg-[#FAF7F2]/50 text-[11px] text-stone-400 text-center">
+                    Menampilkan 6 dari 6 produk &middot; Dihitung otomatis dari riwayat stok produk
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==================== MODAL TAMBAH PRODUK (FRAME 3) ==================== -->
+    <div id="modalTambahProduk" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 border border-[#EADFD3] shadow-2xl relative">
+            <div class="flex items-center justify-between pb-4 border-b border-stone-100 mb-5">
+                <h3 class="text-base font-bold text-stone-900">Tambah Produk</h3>
+                <button type="button" onclick="closeModalTambah()" class="text-stone-400 hover:text-stone-700 p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form onsubmit="handleTambahProduk(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1.5">Nama produk</label>
+                    <input type="text" id="inputNama" placeholder="Siomay Ayam" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1.5">Satuan</label>
+                        <input type="text" id="inputSatuan" value="Porsi" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1.5">Harga jual</label>
+                        <input type="number" id="inputHarga" placeholder="15000" min="0" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1.5">Stok awal</label>
+                        <input type="number" id="inputStok" value="48" min="0" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1.5">Batas minimum</label>
+                        <input type="number" id="inputStokMin" value="10" min="0" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1.5">Kategori</label>
+                    <select id="inputKategori" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red">
+                        <option value="Dimsum Kukus">Dimsum Kukus</option>
+                        <option value="Dimsum Goreng">Dimsum Goreng</option>
+                        <option value="Bakpao">Bakpao</option>
+                    </select>
+                </div>
+
+                <p class="text-[11px] text-stone-400 italic pt-1">
+                    *Stok awal akan dicatat otomatis di riwayat stok produk (BR-02).
+                </p>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-100">
+                    <button type="button" onclick="closeModalTambah()" class="px-4 py-2.5 rounded-lg border border-[#EADFD3] text-xs font-semibold text-stone-600 hover:bg-stone-50 transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-lg bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/owner.js"></script>
+</body>
+</html>
+
