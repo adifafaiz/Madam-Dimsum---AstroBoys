@@ -1,0 +1,45 @@
+/* ==============================================
+   Madam Dimsum - Custom Login Styling
+   ============================================== */
+
+:root {
+    --brand-red: #C8372D;
+    --brand-red-hover: #B22F26;
+    --brand-dark: #2A211C;
+    --brand-light-bg: #FBF7F2;
+    --brand-border: #EADFD3;
+    --brand-secondary: #8A7B70;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--brand-light-bg);
+}
+
+/* Transisi Halus pada Tombol Role */
+.role-btn {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+/* Kustomisasi input focus glow */
+input:focus {
+    box-shadow: 0 0 0 3px rgba(184, 50, 39, 0.15);
+}
+
+/* Animasi Fade */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
