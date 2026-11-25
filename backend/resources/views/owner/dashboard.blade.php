@@ -74,7 +74,7 @@
                         <!-- Bar -->
                         <div 
                             style="height: {{ $day['height'] }};" 
-                            class="w-full max-w-[36px] rounded-t-md transition-all duration-300 {{ !empty($day['is_highest']) ? 'bg-brand-red shadow-sm' : 'bg-brand-redPink hover:bg-brand-red/60' }}">
+                            class="w-full max-w-[36px] rounded-t-md transition-all duration-300 bg-brand-red shadow-sm hover:opacity-90">
                         </div>
                     </div>
                 @endforeach
@@ -83,7 +83,7 @@
             <!-- Label Hari di Bawah Batang -->
             <div class="flex items-center justify-between px-2 sm:px-6 pt-3 text-xs font-medium text-stone-500">
                 @foreach($chartDays as $day)
-                    <span class="flex-1 text-center {{ !empty($day['is_highest']) ? 'font-bold text-brand-red' : '' }}">{{ $day['day'] }}</span>
+                    <span class="flex-1 text-center">{{ $day['day'] }}</span>
                 @endforeach
             </div>
         </div>
