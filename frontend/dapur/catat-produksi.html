@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catat Produksi - Dapur - Madam Dimsum</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#C8372D',
+                            redHover: '#B22F26',
+                            redPink: '#E9A9A1',
+                            dark: '#2A211C',
+                            darkSidebar: '#2A211C',
+                            menuText: '#CDBFB3',
+                            lightBg: '#FBF7F2',
+                            border: '#EADFD3',
+                            secondary: '#8A7B70',
+                            safe: '#2E8B57',
+                            process: '#D9822B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/dapur.css">
+</head>
+<body class="min-h-screen flex antialiased bg-[#FBF7F2] text-[#2A211C]">
+
+    <!-- ==================== SIDEBAR DAPUR (220px) ==================== -->
+    <aside class="w-[220px] bg-brand-dark flex flex-col justify-between shrink-0 min-h-screen text-white select-none fixed left-0 top-0 bottom-0 z-20">
+        <div>
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
+                <img src="../images/logo-madam-dimsum.jpg" alt="Madam Dimsum" class="w-8 h-8 rounded-lg shadow-sm object-cover">
+                <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
+            </div>
+
+            <nav class="p-3 space-y-1 text-[13px] font-medium">
+                <a href="antrian.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    <span>Antrian Pesanan</span>
+                </a>
+                <a href="catat-produksi.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-brand-red text-white font-semibold shadow-sm transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Catat Produksi</span>
+                </a>
+                <a href="stok.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <span>Stok</span>
+                </a>
+                <a href="riwayat-produksi.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Riwayat Produksi</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5 text-[11px] text-stone-500">
+            DimsumKu v2 &middot; Tim Astroboys
+        </div>
+    </aside>
+
+    <!-- ==================== AREA UTAMA KANAN ==================== -->
+    <div class="ml-[220px] flex-1 flex flex-col min-w-0">
+
+        <!-- Header -->
+        <header class="h-16 bg-brand-lightBg border-b border-[#EADFD3] px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight">Catat Produksi</h1>
+
+            <div class="relative">
+                <button type="button" onclick="toggleUserDropdown()" 
+                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#EADFD3] bg-white text-xs font-semibold text-stone-800 hover:bg-stone-50 shadow-sm transition">
+                    <span>Dapur Agus</span>
+                    <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#EADFD3] py-1 z-30">
+                    <div class="px-4 py-2 border-b border-stone-100">
+                        <p class="text-xs font-bold text-stone-900">Agus</p>
+                        <p class="text-[11px] text-stone-500">Peran: Dapur</p>
+                    </div>
+                    <a href="../index.html" class="block px-4 py-2 text-xs font-semibold text-brand-red hover:bg-red-50 transition">Keluar</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content (Mockup Frame 2) -->
+        <main class="flex-1 p-8 max-w-7xl">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                <!-- Form Catat Produksi -->
+                <div class="lg:col-span-7 bg-white rounded-2xl border border-[#EADFD3] p-7 shadow-sm">
+                    <h3 class="text-base font-bold text-stone-900 mb-6">Catat Produksi</h3>
+
+                    <form onsubmit="handleSimpanProduksi(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-stone-600 mb-1.5">Tanggal</label>
+                                <input type="text" value="24 Nov 2026" readonly class="w-full px-3.5 py-2.5 bg-stone-50 border border-[#EADFD3] rounded-xl text-xs font-medium text-stone-800">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-stone-600 mb-1.5">Sesi</label>
+                                <select class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-xl text-xs font-medium text-stone-800 cursor-pointer">
+                                    <option selected>Sore</option>
+                                    <option>Pagi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-600 mb-2.5">Hasil produksi</label>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-[#EADFD3]">
+                                    <span class="text-xs font-bold text-stone-900">Hakau Udang</span>
+                                    <span class="text-brand-red font-bold text-xs bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">+20 porsi</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-[#EADFD3]">
+                                    <span class="text-xs font-bold text-stone-900">Lumpia Udang</span>
+                                    <span class="text-brand-red font-bold text-xs bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">+15 porsi</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-[#EADFD3]">
+                                    <span class="text-xs font-bold text-stone-900">Bakpao Coklat</span>
+                                    <span class="text-brand-red font-bold text-xs bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">+20 porsi</span>
+                                </div>
+                            </div>
+
+                            <button type="button" onclick="alert('Dialog tambah item hasil produksi')" class="mt-3.5 w-full py-2.5 rounded-xl border border-dashed border-[#EADFD3] hover:border-brand-red text-xs font-semibold text-stone-600 hover:text-brand-red transition flex items-center justify-center gap-1.5">
+                                <span>+ Tambah Produk</span>
+                            </button>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-600 mb-1.5">Catatan</label>
+                            <textarea rows="2" class="w-full px-3.5 py-2.5 bg-stone-50 border border-[#EADFD3] rounded-xl text-xs text-stone-800">Produksi sesi 2, persiapan permintaan akhir pekan</textarea>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-100">
+                            <a href="stok.html" class="px-5 py-2.5 rounded-xl border border-[#EADFD3] text-stone-600 hover:bg-stone-50 text-xs font-semibold transition">Batal</a>
+                            <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition">Simpan Produksi</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Preview Kolom Kanan -->
+                <div class="lg:col-span-5 bg-white rounded-2xl border border-[#EADFD3] p-7 shadow-sm">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-stone-500 mb-5">Stok Setelah Disimpan</h4>
+                    <div class="space-y-4 text-xs font-medium text-stone-800 divide-y divide-stone-100">
+                        <div class="flex items-center justify-between pt-3 first:pt-0">
+                            <span class="text-stone-700">Hakau Udang</span>
+                            <span class="font-bold text-stone-900 font-mono">4 &rarr; <span class="text-brand-red">24</span></span>
+                        </div>
+                        <div class="flex items-center justify-between pt-3">
+                            <span class="text-stone-700">Lumpia Udang</span>
+                            <span class="font-bold text-stone-900 font-mono">5 &rarr; <span class="text-brand-red">20</span></span>
+                        </div>
+                        <div class="flex items-center justify-between pt-3">
+                            <span class="text-stone-700">Bakpao Coklat</span>
+                            <span class="font-bold text-stone-900 font-mono">2 &rarr; <span class="text-brand-red">22</span></span>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-5 border-t border-stone-100">
+                        <p class="text-xs font-bold text-[#2E8B57] flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <span>Stok kembali menjadi Aman</span>
+                        </p>
+                        <p class="text-[11px] text-stone-500 mt-1">Semua stok produk di atas sekarang aman dan siap jual.</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="js/dapur.js"></script>
+    <script>
+        function handleSimpanProduksi(e) {
+            e.preventDefault();
+            alert('Hasil produksi berhasil disimpan! Stok produk terkait telah otomatis diperbarui.');
+            window.location.href = 'stok.html';
+        }
+    </script>
+</body>
+</html>
+

@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DapurController;
+use App\Http\Controllers\KasirController;
+use App\Http\Controllers\OwnerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,7 +27,32 @@ Route::prefix('owner')->group(function () {
     Route::get('/dashboard', [OwnerController::class, 'dashboard']);
     Route::get('/produk', [OwnerController::class, 'produk']);
     Route::post('/produk', [OwnerController::class, 'storeProduk']);
+    Route::post('/produk/{product}', [OwnerController::class, 'updateProduk']);
+    Route::delete('/produk/{product}', [OwnerController::class, 'destroyProduk']);
     Route::get('/produk/{product}/riwayat', [OwnerController::class, 'riwayatStok']);
+    Route::get('/stok-masuk', [OwnerController::class, 'stokMasuk']);
+    Route::post('/stok-masuk', [OwnerController::class, 'storeStokMasuk']);
+    Route::get('/pemasok', [OwnerController::class, 'pemasok']);
+    Route::post('/pemasok', [OwnerController::class, 'storePemasok']);
+    Route::get('/laporan', [OwnerController::class, 'laporan']);
+});
+
+// Dapur API Endpoints (untuk Frontend Standalone)
+Route::prefix('dapur')->group(function () {
+    Route::get('/antrian', [DapurController::class, 'antrian']);
+    Route::post('/antrian/{order}', [DapurController::class, 'updateStatusPesanan']);
+    Route::get('/catat-produksi', [DapurController::class, 'catatProduksi']);
+    Route::post('/catat-produksi', [DapurController::class, 'storeProduksi']);
+    Route::get('/stok', [DapurController::class, 'stok']);
+    Route::get('/riwayat-produksi', [DapurController::class, 'riwayatProduksi']);
+});
+
+// Kasir API Endpoints (untuk Frontend Standalone)
+Route::prefix('kasir')->group(function () {
+    Route::get('/transaksi', [KasirController::class, 'transaksi']);
+    Route::post('/transaksi', [KasirController::class, 'storeTransaksi']);
+    Route::get('/cek-stok', [KasirController::class, 'cekStok']);
+    Route::get('/riwayat', [KasirController::class, 'riwayat']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

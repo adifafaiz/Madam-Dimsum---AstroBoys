@@ -18,12 +18,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Akun Pengguna (Users)
+        // 1. Akun Pengguna (Users) sesuai Frame 8
         $owner = User::updateOrCreate(
             ['username' => 'owner'],
             [
                 'name' => 'Madam Owner',
                 'email' => 'owner@madamdimsum.com',
+                'role' => 'owner',
+                'password' => bcrypt('password123'),
+                'is_active' => true,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['username' => 'adifa123'],
+            [
+                'name' => 'Adifa Faiz',
+                'email' => 'adifa@madamdimsum.com',
                 'role' => 'owner',
                 'password' => bcrypt('password123'),
                 'is_active' => true,
@@ -41,21 +52,21 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        User::updateOrCreate(
-            ['username' => 'kasir'],
+        $dani = User::updateOrCreate(
+            ['username' => 'dani'],
             [
-                'name' => 'Kasir Utama',
-                'email' => 'kasir@madamdimsum.com',
+                'name' => 'Dani',
+                'email' => 'dani@madamdimsum.com',
                 'role' => 'kasir',
                 'password' => bcrypt('password123'),
                 'is_active' => true,
             ]
         );
 
-        User::updateOrCreate(
+        $agus = User::updateOrCreate(
             ['username' => 'agus'],
             [
-                'name' => 'Agus Dapur',
+                'name' => 'Agus',
                 'email' => 'agus@madamdimsum.com',
                 'role' => 'dapur',
                 'password' => bcrypt('password123'),
@@ -63,27 +74,20 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Akun Nonaktif untuk UAT-10
-        User::updateOrCreate(
-            ['username' => 'dani'],
-            [
-                'name' => 'Dani Kasir (Nonaktif)',
-                'email' => 'dani@madamdimsum.com',
-                'role' => 'kasir',
-                'password' => bcrypt('password123'),
-                'is_active' => false,
-            ]
-        );
-
-        // 2. Pemasok (Suppliers)
+        // 2. Pemasok (Suppliers) sesuai Frame 5
         $pemasokA = Supplier::updateOrCreate(
-            ['nama' => 'Pemasok Dimsum Jaya'],
-            ['kontak' => '081234567890']
+            ['nama' => 'Pemasok A'],
+            ['kontak' => '0812-3456-7890']
         );
 
         $pemasokB = Supplier::updateOrCreate(
-            ['nama' => 'Pemasok Kemasan Astro'],
-            ['kontak' => '089876543210']
+            ['nama' => 'Pemasok B'],
+            ['kontak' => '0819-8765-4321']
+        );
+
+        $pemasokC = Supplier::updateOrCreate(
+            ['nama' => 'Pemasok C'],
+            ['kontak' => '0856-1234-5678']
         );
 
         // 3. Produk Contoh dari Mockup Owner (Products)
@@ -148,6 +152,16 @@ class DatabaseSeeder extends Seeder
                 'supplier_id' => $pemasokA->id,
                 'is_active' => true,
             ],
+            [
+                'nama' => 'Dimsum Mentai',
+                'kategori' => 'Dimsum Kukus',
+                'satuan' => 'Porsi',
+                'harga' => 20000.00,
+                'stok' => 0, // Habis sesuai Mockup Dapur Frame 3
+                'stok_minimum' => 10,
+                'supplier_id' => $pemasokA->id,
+                'is_active' => true,
+            ],
         ];
 
         $createdProducts = [];
@@ -171,39 +185,57 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // 4. Transaksi Contoh (Orders) sesuai Mockup
+        // 4. Transaksi Contoh (Orders) untuk Owner & Antrian Dapur (Frame 1)
         $ordersData = [
             [
-                'kode' => 'TRX-0062',
-                'waktu' => Carbon::today()->setHour(14)->setMinute(32),
+                'kode' => 'TRX-0065',
+                'waktu' => Carbon::today()->setHour(14)->setMinute(40),
                 'user_id' => $rina->id,
                 'total' => 48000.00,
                 'dibayar' => 50000.00,
                 'kembalian' => 2000.00,
-                'status' => 'selesai',
+                'status' => 'baru',
             ],
             [
-                'kode' => 'TRX-0061',
-                'waktu' => Carbon::today()->setHour(14)->setMinute(20),
+                'kode' => 'TRX-0064',
+                'waktu' => Carbon::today()->setHour(14)->setMinute(30),
                 'user_id' => $rina->id,
+                'total' => 84000.00,
+                'dibayar' => 100000.00,
+                'kembalian' => 16000.00,
+                'status' => 'siap',
+            ],
+            [
+                'kode' => 'TRX-0063',
+                'waktu' => Carbon::today()->setHour(14)->setMinute(25),
+                'user_id' => $rina->id,
+                'total' => 48000.00,
+                'dibayar' => 50000.00,
+                'kembalian' => 2000.00,
+                'status' => 'diproses',
+            ],
+            [
+                'kode' => 'TRX-0062',
+                'waktu' => Carbon::today()->setHour(13)->setMinute(50),
+                'user_id' => $dani->id,
                 'total' => 32000.00,
                 'dibayar' => 50000.00,
                 'kembalian' => 18000.00,
                 'status' => 'selesai',
             ],
             [
-                'kode' => 'TRX-0060',
-                'waktu' => Carbon::today()->setHour(13)->setMinute(50),
+                'kode' => 'TRX-0061',
+                'waktu' => Carbon::today()->setHour(14)->setMinute(10),
                 'user_id' => $rina->id,
-                'total' => 64000.00,
-                'dibayar' => 100000.00,
-                'kembalian' => 36000.00,
-                'status' => 'selesai',
+                'total' => 42000.00,
+                'dibayar' => 50000.00,
+                'kembalian' => 8000.00,
+                'status' => 'baru',
             ],
             [
-                'kode' => 'TRX-0059',
+                'kode' => 'TRX-0060',
                 'waktu' => Carbon::today()->setHour(12)->setMinute(15),
-                'user_id' => $rina->id,
+                'user_id' => $dani->id,
                 'total' => 28000.00,
                 'dibayar' => 30000.00,
                 'kembalian' => 2000.00,
@@ -214,18 +246,103 @@ class DatabaseSeeder extends Seeder
         foreach ($ordersData as $oData) {
             $order = Order::updateOrCreate(['kode' => $oData['kode']], $oData);
 
-            // Item pesanan
-            OrderItem::firstOrCreate(
+            if ($order->kode === 'TRX-0065') {
+                OrderItem::firstOrCreate(
+                    ['order_id' => $order->id, 'product_id' => $createdProducts['Siomay Ayam']->id],
+                    ['qty' => 2, 'harga_satuan' => 15000.00, 'subtotal' => 30000.00]
+                );
+                OrderItem::firstOrCreate(
+                    ['order_id' => $order->id, 'product_id' => $createdProducts['Hakau Udang']->id],
+                    ['qty' => 1, 'harga_satuan' => 18000.00, 'subtotal' => 18000.00]
+                );
+            } elseif ($order->kode === 'TRX-0061') {
+                OrderItem::firstOrCreate(
+                    ['order_id' => $order->id, 'product_id' => $createdProducts['Bakpao Coklat']->id],
+                    ['qty' => 3, 'harga_satuan' => 14000.00, 'subtotal' => 42000.00]
+                );
+            } elseif ($order->kode === 'TRX-0063') {
+                OrderItem::firstOrCreate(
+                    ['order_id' => $order->id, 'product_id' => $createdProducts['Pangsit Goreng']->id],
+                    ['qty' => 2, 'harga_satuan' => 14000.00, 'subtotal' => 28000.00]
+                );
+                OrderItem::firstOrCreate(
+                    ['order_id' => $order->id, 'product_id' => $createdProducts['Siomay Ayam']->id],
+                    ['qty' => 1, 'harga_satuan' => 15000.00, 'subtotal' => 15000.00]
+                );
+            } elseif ($order->kode === 'TRX-0064') {
+                OrderItem::firstOrCreate(
+                    ['order_id' => $order->id, 'product_id' => $createdProducts['Dimsum Mentai']->id],
+                    ['qty' => 1, 'harga_satuan' => 20000.00, 'subtotal' => 20000.00]
+                );
+            } else {
+                OrderItem::firstOrCreate(
+                    ['order_id' => $order->id, 'product_id' => $createdProducts['Siomay Ayam']->id],
+                    ['qty' => 2, 'harga_satuan' => 15000.00, 'subtotal' => 30000.00]
+                );
+            }
+        }
+
+        // Sample Riwayat Produksi Dapur (Frame 4)
+        $riwayatProduksiData = [
+            ['nama' => 'Siomay Ayam', 'qty' => 20, 'sesi' => 'pagi', 'ket' => null, 'menit' => 20],
+            ['nama' => 'Hakau Udang', 'qty' => 20, 'sesi' => 'sore', 'ket' => null, 'menit' => 10],
+            ['nama' => 'Lumpia Udang', 'qty' => 15, 'sesi' => 'sore', 'ket' => 'Tambahan stok', 'menit' => 0],
+            ['nama' => 'Bakpao Coklat', 'qty' => 20, 'sesi' => 'sore', 'ket' => null, 'menit' => 50],
+        ];
+
+        foreach ($riwayatProduksiData as $rp) {
+            StockMovement::firstOrCreate(
                 [
-                    'order_id' => $order->id,
-                    'product_id' => $createdProducts['Siomay Ayam']->id,
+                    'product_id' => $createdProducts[$rp['nama']]->id,
+                    'jenis' => 'produksi',
+                    'sesi' => $rp['sesi'],
+                    'qty' => $rp['qty'],
                 ],
                 [
-                    'qty' => 2,
-                    'harga_satuan' => 15000.00,
-                    'subtotal' => 30000.00,
+                    'user_id' => $agus->id,
+                    'tanggal' => Carbon::today()->setHour(15)->setMinute($rp['menit']),
+                    'saldo_setelah' => $createdProducts[$rp['nama']]->stok,
+                    'keterangan' => $rp['ket'],
                 ]
             );
         }
+
+        // 5. Data Pencadangan & Pengaturan Sesuai Frame 9
+        \App\Models\Setting::updateOrCreate(
+            ['kunci' => 'backup_frekuensi'],
+            ['nilai' => 'Harian']
+        );
+        \App\Models\Setting::updateOrCreate(
+            ['kunci' => 'backup_jam'],
+            ['nilai' => '02:00']
+        );
+
+        \App\Models\Backup::updateOrCreate(
+            ['file_path' => 'backups/backup_2026_11_24_020000.sqlite'],
+            [
+                'waktu' => Carbon::today()->setHour(2)->setMinute(0),
+                'ukuran_kb' => 1200,
+                'jenis' => 'otomatis',
+                'status' => 'berhasil',
+            ]
+        );
+        \App\Models\Backup::updateOrCreate(
+            ['file_path' => 'backups/backup_2026_11_23_020000.sqlite'],
+            [
+                'waktu' => Carbon::yesterday()->setHour(2)->setMinute(0),
+                'ukuran_kb' => 1200,
+                'jenis' => 'otomatis',
+                'status' => 'berhasil',
+            ]
+        );
+        \App\Models\Backup::updateOrCreate(
+            ['file_path' => 'backups/backup_2026_11_22_144500.sqlite'],
+            [
+                'waktu' => Carbon::today()->subDays(2)->setHour(14)->setMinute(45),
+                'ukuran_kb' => 1200,
+                'jenis' => 'manual',
+                'status' => 'berhasil',
+            ]
+        );
     }
 }

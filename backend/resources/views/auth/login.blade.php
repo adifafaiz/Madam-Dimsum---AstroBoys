@@ -48,14 +48,16 @@
 
             <!-- Header / Logo -->
             <div class="flex items-center gap-3.5 z-10">
-                <div class="w-11 h-11 bg-brand-red rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-brand-red/20 tracking-wider">
-                    M
-                </div>
+                <img src="{{ asset('images/logo-madam-dimsum.jpg') }}" alt="Madam Dimsum" class="w-11 h-11 rounded-xl shadow-lg shadow-brand-red/20 object-cover">
                 <span class="text-xl font-bold tracking-tight text-white">Madam Dimsum</span>
             </div>
 
             <!-- Konten Utama Branding -->
             <div class="my-16 lg:my-0 z-10 max-w-lg">
+                <!-- Logo Besar Madam Dimsum -->
+                <div class="flex justify-center mb-8">
+                    <img src="{{ asset('images/logo-madam-dimsum.jpg') }}" alt="Logo Madam Dimsum" class="w-48 h-48 object-contain rounded-2xl">
+                </div>
                 <h1 class="text-3xl sm:text-4xl lg:text-[42px] font-bold text-white tracking-tight leading-tight">
                     Produksi tertata, stok terjaga
                 </h1>

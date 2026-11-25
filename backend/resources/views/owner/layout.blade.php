@@ -51,9 +51,7 @@
         <div>
             <!-- Header Brand / Logo -->
             <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
-                <div class="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center font-bold text-white text-base shadow-sm">
-                    M
-                </div>
+                <img src="{{ asset('images/logo-madam-dimsum.jpg') }}" alt="Madam Dimsum" class="w-8 h-8 rounded-lg shadow-sm object-cover">
                 <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
             </div>
 
@@ -70,7 +68,7 @@
 
                 <!-- 2. Produk & Stok -->
                 <a href="{{ route('owner.produk') }}" 
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('owner.produk*') ? 'bg-brand-red text-white font-semibold shadow-sm' : 'text-brand-menuText hover:text-white hover:bg-white/5' }}">
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition {{ (request()->routeIs('owner.produk*') || request()->routeIs('owner.stok-masuk*')) ? 'bg-brand-red text-white font-semibold shadow-sm' : 'text-brand-menuText hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
@@ -78,8 +76,8 @@
                 </a>
 
                 <!-- 3. Pemasok -->
-                <a href="javascript:void(0)" onclick="alert('Menu Pemasok (FR-25): Mengelola data pemasok dan pesan stok via WhatsApp.')"
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                <a href="{{ route('owner.pemasok') }}" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('owner.pemasok*') ? 'bg-brand-red text-white font-semibold shadow-sm' : 'text-brand-menuText hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
@@ -87,8 +85,8 @@
                 </a>
 
                 <!-- 4. Laporan -->
-                <a href="javascript:void(0)" onclick="alert('Menu Laporan Penjualan (FR-27): Ekspor data transaksi bulanan ke Excel / PDF.')"
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                <a href="{{ route('owner.laporan') }}" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('owner.laporan*') ? 'bg-brand-red text-white font-semibold shadow-sm' : 'text-brand-menuText hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
@@ -96,8 +94,8 @@
                 </a>
 
                 <!-- 5. Riwayat Transaksi -->
-                <a href="javascript:void(0)" onclick="alert('Menu Riwayat Transaksi (FR-28): Mencari rincian nota & batalkan transaksi (BR-06).')"
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                <a href="{{ route('owner.riwayat-transaksi') }}" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('owner.riwayat-transaksi*') ? 'bg-brand-red text-white font-semibold shadow-sm' : 'text-brand-menuText hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -105,8 +103,8 @@
                 </a>
 
                 <!-- 6. Pengguna -->
-                <a href="javascript:void(0)" onclick="alert('Menu Pengguna (FR-29): Kelola hak akses akun Owner, Kasir, dan Dapur.')"
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                <a href="{{ route('owner.pengguna') }}" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('owner.pengguna*') ? 'bg-brand-red text-white font-semibold shadow-sm' : 'text-brand-menuText hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
@@ -114,8 +112,8 @@
                 </a>
 
                 <!-- 7. Pencadangan -->
-                <a href="javascript:void(0)" onclick="alert('Menu Pencadangan (FR-30): Cadangkan database sekarang atau atur jadwal otomatis jam 02:00.')"
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                <a href="{{ route('owner.pencadangan') }}" 
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('owner.pencadangan*') ? 'bg-brand-red text-white font-semibold shadow-sm' : 'text-brand-menuText hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                     </svg>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akses Ditolak - Dapur - Madam Dimsum</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#C8372D',
+                            redHover: '#B22F26',
+                            redPink: '#E9A9A1',
+                            dark: '#2A211C',
+                            darkSidebar: '#2A211C',
+                            menuText: '#CDBFB3',
+                            lightBg: '#FBF7F2',
+                            border: '#EADFD3',
+                            secondary: '#8A7B70',
+                            safe: '#2E8B57',
+                            process: '#D9822B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/dapur.css">
+</head>
+<body class="min-h-screen flex antialiased bg-[#FBF7F2] text-[#2A211C]">
+
+    <!-- ==================== SIDEBAR DAPUR ==================== -->
+    <aside class="w-[220px] bg-brand-dark flex flex-col justify-between shrink-0 min-h-screen text-white select-none fixed left-0 top-0 bottom-0 z-20">
+        <div>
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
+                <img src="../images/logo-madam-dimsum.jpg" alt="Madam Dimsum" class="w-8 h-8 rounded-lg shadow-sm object-cover">
+                <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
+            </div>
+
+            <nav class="p-3 space-y-1 text-[13px] font-medium opacity-50 pointer-events-none">
+                <div class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    <span>Antrian Pesanan</span>
+                </div>
+                <div class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Catat Produksi</span>
+                </div>
+                <div class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <span>Stok</span>
+                </div>
+                <div class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Riwayat Produksi</span>
+                </div>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5 text-[11px] text-stone-500">
+            DimsumKu v2 &middot; Tim Astroboys
+        </div>
+    </aside>
+
+    <!-- ==================== AREA UTAMA KANAN ==================== -->
+    <div class="ml-[220px] flex-1 flex flex-col min-w-0">
+
+        <!-- Header -->
+        <header class="h-16 bg-brand-lightBg border-b border-[#EADFD3] px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight">Akses Ditolak</h1>
+
+            <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#EADFD3] bg-white text-xs font-semibold text-stone-500 shadow-sm">
+                <span>Dapur</span>
+            </div>
+        </header>
+
+        <!-- Main Content (Mockup Frame 5: Akses Ditolak) -->
+        <main class="flex-1 p-8 flex items-center justify-center">
+            <div class="max-w-md w-full bg-white rounded-2xl p-8 border border-[#EADFD3] shadow-sm text-center">
+                <!-- Lock Icon dalam lingkaran merah/pink muda -->
+                <div class="w-16 h-16 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-5 text-brand-red">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+
+                <h2 class="text-xl font-bold text-stone-900 tracking-tight mb-2">Akses Ditolak</h2>
+                <p class="text-stone-500 text-xs mb-8 leading-relaxed">
+                    Halaman ini khusus untuk Dapur. Silakan login menggunakan akun dapur yang memiliki hak akses.
+                </p>
+
+                <a href="antrian.html" class="inline-block w-full py-3 px-5 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition">
+                    Kembali Ke Antrian Pesanan
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/dapur.js"></script>
+</body>
+</html>
+

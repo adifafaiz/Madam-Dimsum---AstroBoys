@@ -55,9 +55,11 @@ function renderProductsTable(items) {
                     </span>
                 </td>
                 <td class="py-4 px-6 text-right whitespace-nowrap">
-                    <a href="javascript:void(0)" onclick="alert('Edit Produk ${p.nama} (FR-22)')" class="text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline">Edit</a>
+                    <a href="javascript:void(0)" onclick="openModalEdit(${p.id})" class="text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline">Edit</a>
                     <span class="text-stone-300 mx-1.5">&middot;</span>
-                    <a href="javascript:void(0)" onclick="alert('Riwayat Stok ${p.nama} (FR-23):\\n- Stok Awal: ${p.stok} porsi')" class="text-xs font-semibold text-brand-red hover:underline">Riwayat</a>
+                    <a href="javascript:void(0)" onclick="alert('Riwayat Stok ${p.nama} (FR-23):\\n- Stok Saat Ini: ${p.stok} porsi')" class="text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline">Riwayat</a>
+                    <span class="text-stone-300 mx-1.5">&middot;</span>
+                    <a href="javascript:void(0)" onclick="hapusProduk(${p.id})" class="text-xs font-semibold text-brand-red hover:underline">Hapus</a>
                 </td>
             </tr>
         `;
@@ -116,6 +118,76 @@ function handleTambahProduk(e) {
     closeModalTambah();
     filterProducts();
     alert(`Produk '${nama}' berhasil ditambahkan! Stok awal ${stok} otomatis tercatat di riwayat (BR-02).`);
+}
+
+let activeEditId = null;
+
+function openModalEdit(id) {
+    const prod = products.find(p => p.id === id);
+    if (!prod) return;
+
+    activeEditId = id;
+    document.getElementById('editNama').value = prod.nama;
+    document.getElementById('editSatuan').value = prod.satuan;
+    document.getElementById('editHarga').value = prod.harga;
+    document.getElementById('editStok').value = prod.stok;
+    document.getElementById('editStokMin').value = prod.stok_minimum;
+    document.getElementById('editKategori').value = prod.kategori;
+    document.getElementById('editAlasan').value = '';
+
+    document.getElementById('modalEditProduk')?.classList.remove('hidden');
+}
+
+function closeModalEdit() {
+    document.getElementById('modalEditProduk')?.classList.add('hidden');
+    activeEditId = null;
+}
+
+function handleEditProduk(e) {
+    e.preventDefault();
+    if (!activeEditId) return;
+
+    const prod = products.find(p => p.id === activeEditId);
+    if (!prod) return;
+
+    const oldStok = prod.stok;
+    const newStok = Number(document.getElementById('editStok').value);
+    const stokMin = Number(document.getElementById('editStokMin').value);
+
+    prod.nama = document.getElementById('editNama').value;
+    prod.satuan = document.getElementById('editSatuan').value;
+    prod.harga = Number(document.getElementById('editHarga').value);
+    prod.stok = newStok;
+    prod.stok_minimum = stokMin;
+    prod.kategori = document.getElementById('editKategori').value;
+    prod.status = newStok <= 0 ? 'Habis' : (newStok < stokMin ? 'Menipis' : 'Aman');
+
+    closeModalEdit();
+    filterProducts();
+
+    if (newStok !== oldStok) {
+        alert(`Perubahan produk '${prod.nama}' berhasil disimpan!\nPenyesuaian stok dari ${oldStok} menjadi ${newStok} otomatis dicatat di riwayat (BR-02 & FR-22).`);
+    } else {
+        alert(`Data produk '${prod.nama}' berhasil diperbarui!`);
+    }
+}
+
+function hapusProduk(id) {
+    const prod = products.find(p => p.id === id);
+    if (!prod) return;
+
+    if (confirm(`Apakah Anda yakin ingin menghapus produk '${prod.nama}'?\nProduk akan dinonaktifkan dari katalog dan penjualan (BR-11).`)) {
+        products = products.filter(p => p.id !== id);
+        filterProducts();
+        alert(`Produk '${prod.nama}' berhasil dihapus (dinonaktifkan)!`);
+    }
+}
+
+function hapusProdukDariModal() {
+    if (!activeEditId) return;
+    const id = activeEditId;
+    closeModalEdit();
+    hapusProduk(id);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

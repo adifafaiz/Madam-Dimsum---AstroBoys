@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stok Produk - Dapur - Madam Dimsum</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#C8372D',
+                            redHover: '#B22F26',
+                            redPink: '#E9A9A1',
+                            dark: '#2A211C',
+                            darkSidebar: '#2A211C',
+                            menuText: '#CDBFB3',
+                            lightBg: '#FBF7F2',
+                            border: '#EADFD3',
+                            secondary: '#8A7B70',
+                            safe: '#2E8B57',
+                            process: '#D9822B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/dapur.css">
+</head>
+<body class="min-h-screen flex antialiased bg-[#FBF7F2] text-[#2A211C]">
+
+    <!-- ==================== SIDEBAR DAPUR (220px) ==================== -->
+    <aside class="w-[220px] bg-brand-dark flex flex-col justify-between shrink-0 min-h-screen text-white select-none fixed left-0 top-0 bottom-0 z-20">
+        <div>
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
+                <img src="../images/logo-madam-dimsum.jpg" alt="Madam Dimsum" class="w-8 h-8 rounded-lg shadow-sm object-cover">
+                <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
+            </div>
+
+            <nav class="p-3 space-y-1 text-[13px] font-medium">
+                <a href="antrian.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    <span>Antrian Pesanan</span>
+                </a>
+                <a href="catat-produksi.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Catat Produksi</span>
+                </a>
+                <a href="stok.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-brand-red text-white font-semibold shadow-sm transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <span>Stok</span>
+                </a>
+                <a href="riwayat-produksi.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Riwayat Produksi</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5 text-[11px] text-stone-500">
+            DimsumKu v2 &middot; Tim Astroboys
+        </div>
+    </aside>
+
+    <!-- ==================== AREA UTAMA KANAN ==================== -->
+    <div class="ml-[220px] flex-1 flex flex-col min-w-0">
+
+        <!-- Header -->
+        <header class="h-16 bg-brand-lightBg border-b border-[#EADFD3] px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight">Stok Produk</h1>
+
+            <div class="relative">
+                <button type="button" onclick="toggleUserDropdown()" 
+                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#EADFD3] bg-white text-xs font-semibold text-stone-800 hover:bg-stone-50 shadow-sm transition">
+                    <span>Dapur Agus</span>
+                    <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#EADFD3] py-1 z-30">
+                    <div class="px-4 py-2 border-b border-stone-100">
+                        <p class="text-xs font-bold text-stone-900">Agus</p>
+                        <p class="text-[11px] text-stone-500">Peran: Dapur</p>
+                    </div>
+                    <a href="../index.html" class="block px-4 py-2 text-xs font-semibold text-brand-red hover:bg-red-50 transition">Keluar</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content (Mockup Frame 3) -->
+        <main class="flex-1 p-8 space-y-6 max-w-7xl">
+            <!-- Filter & Search -->
+            <div class="bg-white rounded-2xl border border-[#EADFD3] p-5 shadow-sm space-y-3.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="relative w-full sm:w-80">
+                        <input 
+                            type="text" 
+                            id="searchInput"
+                            oninput="filterTable()"
+                            placeholder="Cari produk..." 
+                            class="w-full pl-9 pr-4 py-2 bg-stone-50 border border-[#EADFD3] rounded-xl text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red"
+                        >
+                        <svg class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-stone-700">
+                            <input 
+                                type="checkbox" 
+                                id="filterPerluProduksi"
+                                onchange="filterTable()"
+                                class="w-4 h-4 rounded border-stone-300 text-brand-red focus:ring-brand-red accent-brand-red"
+                            >
+                            <span>Hanya tampilkan yang perlu diproduksi atau sudah habis</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Stok Produk -->
+            <div class="bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs" id="stokTable">
+                        <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+                            <tr>
+                                <th class="py-3.5 px-6">Produk</th>
+                                <th class="py-3.5 px-6">Stok</th>
+                                <th class="py-3.5 px-6">Batas Min</th>
+                                <th class="py-3.5 px-6">Status</th>
+                                <th class="py-3.5 px-6">Perlu Diproduksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                            <tr class="hover:bg-stone-50/70 transition" data-status="Aman">
+                                <td class="py-4 px-6 font-bold text-stone-900">Siomay Ayam</td>
+                                <td class="py-4 px-6 font-bold text-stone-900">45</td>
+                                <td class="py-4 px-6 text-stone-500">15</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#2E8B57] bg-[#2E8B57]/10 border border-[#2E8B57]/20">Aman</span></td>
+                                <td class="py-4 px-6 text-stone-300">-</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/70 transition" data-status="Menipis">
+                                <td class="py-4 px-6 font-bold text-stone-900">Hakau Udang</td>
+                                <td class="py-4 px-6 font-bold text-[#D9822B]">4</td>
+                                <td class="py-4 px-6 text-stone-500">10</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#D9822B] bg-[#D9822B]/10 border border-[#D9822B]/20">Menipis</span></td>
+                                <td class="py-4 px-6 font-semibold text-brand-red">20 porsi</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/70 transition" data-status="Menipis">
+                                <td class="py-4 px-6 font-bold text-stone-900">Lumpia Udang</td>
+                                <td class="py-4 px-6 font-bold text-[#D9822B]">5</td>
+                                <td class="py-4 px-6 text-stone-500">10</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#D9822B] bg-[#D9822B]/10 border border-[#D9822B]/20">Menipis</span></td>
+                                <td class="py-4 px-6 font-semibold text-brand-red">20 porsi</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/70 transition" data-status="Menipis">
+                                <td class="py-4 px-6 font-bold text-stone-900">Bakpao Coklat</td>
+                                <td class="py-4 px-6 font-bold text-[#D9822B]">2</td>
+                                <td class="py-4 px-6 text-stone-500">10</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#D9822B] bg-[#D9822B]/10 border border-[#D9822B]/20">Menipis</span></td>
+                                <td class="py-4 px-6 font-semibold text-brand-red">20 porsi</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/70 transition" data-status="Aman">
+                                <td class="py-4 px-6 font-bold text-stone-900">Pangsit Goreng</td>
+                                <td class="py-4 px-6 font-bold text-stone-900">25</td>
+                                <td class="py-4 px-6 text-stone-500">10</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#2E8B57] bg-[#2E8B57]/10 border border-[#2E8B57]/20">Aman</span></td>
+                                <td class="py-4 px-6 text-stone-300">-</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50/70 transition" data-status="Habis">
+                                <td class="py-4 px-6 font-bold text-stone-900">Dimsum Mentai</td>
+                                <td class="py-4 px-6 font-bold text-brand-red">0</td>
+                                <td class="py-4 px-6 text-stone-500">10</td>
+                                <td class="py-4 px-6"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-brand-red bg-brand-red/10 border border-brand-red/20">Habis</span></td>
+                                <td class="py-4 px-6 font-semibold text-brand-red">20 porsi</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/dapur.js"></script>
+    <script>
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const onlyNeed = document.getElementById('filterPerluProduksi').checked;
+            const rows = document.querySelectorAll('#stokTable tbody tr');
+
+            rows.forEach(row => {
+                const name = row.children[0].textContent.toLowerCase();
+                const status = row.getAttribute('data-status');
+                const matchesQuery = name.includes(query);
+                const matchesNeed = !onlyNeed || (status === 'Menipis' || status === 'Habis');
+
+                if (matchesQuery && matchesNeed) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

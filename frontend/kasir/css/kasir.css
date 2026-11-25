@@ -1,0 +1,25 @@
+/* Madam Dimsum - Kasir CSS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #FBF7F2;
+    color: #2A211C;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #FBF7F2;
+}
+::-webkit-scrollbar-thumb {
+    background: #EADFD3;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #CDBFB3;
+}
+

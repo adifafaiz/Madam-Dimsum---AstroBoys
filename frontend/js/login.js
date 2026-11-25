@@ -193,9 +193,20 @@ async function handleFormSubmit(event) {
             showAlert('error', data.message || 'Login gagal. Periksa kembali username dan password Anda.');
         }
     } catch (err) {
-        // Fallback jika backend server belum dinyalakan oleh user
-        console.warn('Gagal terhubung ke API backend:', err);
-        showAlert('info', `Server Backend (${API_BASE_URL}) belum aktif. Jalankan 'php artisan serve' di folder backend. (Kredensial Anda: [${role.toUpperCase()}] ${username})`);
+        // Fallback jika backend server belum dinyalakan oleh user: simulasi login frontend
+        console.warn('Gagal terhubung ke API backend, menggunakan simulasi frontend:', err);
+        showAlert('success', `Login demo frontend berhasil! Selamat datang, ${username} (${role.toUpperCase()})`);
+        setTimeout(() => {
+            if (role === 'owner') {
+                window.location.href = 'owner/dashboard.html';
+            } else if (role === 'dapur') {
+                window.location.href = 'dapur/antrian.html';
+            } else if (role === 'kasir') {
+                window.location.href = 'kasir/transaksi.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        }, 800);
     } finally {
         submitBtn.disabled = false;
         spinner.classList.add('hidden');

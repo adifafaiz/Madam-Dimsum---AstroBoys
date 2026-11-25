@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pencatatan Transaksi - Kasir - Madam Dimsum</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#C8372D',
+                            redHover: '#B22F26',
+                            redPink: '#E9A9A1',
+                            dark: '#2A211C',
+                            darkSidebar: '#2A211C',
+                            menuText: '#CDBFB3',
+                            lightBg: '#FBF7F2',
+                            border: '#EADFD3',
+                            secondary: '#8A7B70',
+                            safe: '#2E8B57',
+                            process: '#D9822B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/kasir.css">
+</head>
+<body class="min-h-screen flex antialiased bg-[#FBF7F2] text-[#2A211C]">
+
+    <!-- ==================== SIDEBAR KASIR (220px) ==================== -->
+    <aside class="w-[220px] bg-brand-dark flex flex-col justify-between shrink-0 min-h-screen text-white select-none fixed left-0 top-0 bottom-0 z-20">
+        <div>
+            <!-- Header Brand / Logo -->
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
+                <img src="../images/logo-madam-dimsum.jpg" alt="Madam Dimsum" class="w-8 h-8 rounded-lg shadow-sm object-cover">
+                <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
+            </div>
+
+            <!-- Menu Navigasi Modul Kasir -->
+            <nav class="p-3 space-y-1 text-[13px] font-medium">
+                <!-- 1. Transaksi (Active) -->
+                <a href="transaksi.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-brand-red text-white font-semibold shadow-sm transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <span>Transaksi</span>
+                </a>
+
+                <!-- 2. Cek Stok -->
+                <a href="cek-stok.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span>Cek Stok</span>
+                </a>
+
+                <!-- 3. Riwayat Saya -->
+                <a href="riwayat.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Riwayat Saya</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5 text-[11px] text-stone-500">
+            DimsumKu v2 &middot; Tim Astroboys
+        </div>
+    </aside>
+
+    <!-- ==================== AREA UTAMA KANAN ==================== -->
+    <div class="ml-[220px] flex-1 flex flex-col min-w-0">
+
+        <!-- Top Header Bar -->
+        <header class="h-16 bg-brand-lightBg border-b border-[#EADFD3] px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight">Pencatatan Transaksi</h1>
+
+            <div class="relative">
+                <button type="button" onclick="toggleUserDropdown()" 
+                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#EADFD3] bg-white text-xs font-semibold text-stone-800 hover:bg-stone-50 shadow-sm transition">
+                    <span>Kasir Rina</span>
+                    <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#EADFD3] py-1 z-30">
+                    <div class="px-4 py-2 border-b border-stone-100">
+                        <p class="text-xs font-bold text-stone-900">Rina</p>
+                        <p class="text-[11px] text-stone-500">Peran: Kasir</p>
+                    </div>
+                    <a href="../index.html" class="block px-4 py-2 text-xs font-semibold text-brand-red hover:bg-red-50 transition">Keluar</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content (Mockup Frame 1) -->
+        <main class="flex-1 p-8 max-w-7xl">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                <!-- SISI KIRI: KATALOG PRODUK -->
+                <div class="lg:col-span-7 space-y-5">
+                    <div class="flex flex-col sm:flex-row items-center gap-3">
+                        <div class="relative flex-1 w-full">
+                            <input type="text" id="searchInput" oninput="filterKatalog()" placeholder="Cari produk..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-[#EADFD3] rounded-xl text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red shadow-sm">
+                            <svg class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </div>
+                        <select id="kategoriSelect" onchange="filterKatalog()" class="w-full sm:w-auto px-4 py-2.5 bg-white border border-[#EADFD3] rounded-xl text-xs font-semibold text-stone-800 shadow-sm cursor-pointer focus:outline-none">
+                            <option>Semua</option>
+                            <option>Dimsum Kukus</option>
+                            <option>Dimsum Goreng</option>
+                            <option>Bakpao</option>
+                        </select>
+                    </div>
+
+                    <!-- Grid Katalog Produk Sesuai Mockup Frame 1 -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="katalogGrid">
+                        <!-- Card 1: Siomay Ayam -->
+                        <div onclick="addToCart('Siomay Ayam', 15000, 48)" class="prod-card bg-white rounded-2xl border border-[#EADFD3] p-3.5 shadow-sm hover:border-brand-red cursor-pointer transition flex flex-col justify-between group" data-nama="siomay ayam" data-cat="dimsum kukus">
+                            <div class="w-full h-24 bg-[#FAF7F2] border border-[#EADFD3]/60 rounded-xl flex items-center justify-center mb-3 text-stone-300 font-mono text-xs font-bold group-hover:bg-red-50/50">Foto</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-stone-900 group-hover:text-brand-red transition truncate">Siomay Ayam</h4>
+                                <div class="flex items-center justify-between mt-1.5 pt-1 border-t border-stone-100">
+                                    <span class="text-xs font-bold text-stone-800">Rp 15.000</span>
+                                    <span class="text-[10px] font-semibold text-[#2E8B57] bg-green-50 px-1.5 py-0.5 rounded">Sisa 48</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Hakau Udang -->
+                        <div onclick="addToCart('Hakau Udang', 18000, 4)" class="prod-card bg-white rounded-2xl border border-[#EADFD3] p-3.5 shadow-sm hover:border-brand-red cursor-pointer transition flex flex-col justify-between group" data-nama="hakau udang" data-cat="dimsum kukus">
+                            <div class="w-full h-24 bg-[#FAF7F2] border border-[#EADFD3]/60 rounded-xl flex items-center justify-center mb-3 text-stone-300 font-mono text-xs font-bold group-hover:bg-red-50/50">Foto</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-stone-900 group-hover:text-brand-red transition truncate">Hakau Udang</h4>
+                                <div class="flex items-center justify-between mt-1.5 pt-1 border-t border-stone-100">
+                                    <span class="text-xs font-bold text-stone-800">Rp 18.000</span>
+                                    <span class="text-[10px] font-semibold text-[#D9822B] bg-orange-50 px-1.5 py-0.5 rounded">Sisa 4</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Lumpia Udang -->
+                        <div onclick="addToCart('Lumpia Udang', 16000, 2)" class="prod-card bg-white rounded-2xl border border-[#EADFD3] p-3.5 shadow-sm hover:border-brand-red cursor-pointer transition flex flex-col justify-between group" data-nama="lumpia udang" data-cat="dimsum goreng">
+                            <div class="w-full h-24 bg-[#FAF7F2] border border-[#EADFD3]/60 rounded-xl flex items-center justify-center mb-3 text-stone-300 font-mono text-xs font-bold group-hover:bg-red-50/50">Foto</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-stone-900 group-hover:text-brand-red transition truncate">Lumpia Udang</h4>
+                                <div class="flex items-center justify-between mt-1.5 pt-1 border-t border-stone-100">
+                                    <span class="text-xs font-bold text-stone-800">Rp 16.000</span>
+                                    <span class="text-[10px] font-semibold text-[#D9822B] bg-orange-50 px-1.5 py-0.5 rounded">Sisa 2</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Bakpao Coklat -->
+                        <div onclick="addToCart('Bakpao Coklat', 12000, 6)" class="prod-card bg-white rounded-2xl border border-[#EADFD3] p-3.5 shadow-sm hover:border-brand-red cursor-pointer transition flex flex-col justify-between group" data-nama="bakpao coklat" data-cat="bakpao">
+                            <div class="w-full h-24 bg-[#FAF7F2] border border-[#EADFD3]/60 rounded-xl flex items-center justify-center mb-3 text-stone-300 font-mono text-xs font-bold group-hover:bg-red-50/50">Foto</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-stone-900 group-hover:text-brand-red transition truncate">Bakpao Coklat</h4>
+                                <div class="flex items-center justify-between mt-1.5 pt-1 border-t border-stone-100">
+                                    <span class="text-xs font-bold text-stone-800">Rp 12.000</span>
+                                    <span class="text-[10px] font-semibold text-[#D9822B] bg-orange-50 px-1.5 py-0.5 rounded">Sisa 6</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 5: Pangsit Goreng -->
+                        <div onclick="addToCart('Pangsit Goreng', 14000, 24)" class="prod-card bg-white rounded-2xl border border-[#EADFD3] p-3.5 shadow-sm hover:border-brand-red cursor-pointer transition flex flex-col justify-between group" data-nama="pangsit goreng" data-cat="dimsum goreng">
+                            <div class="w-full h-24 bg-[#FAF7F2] border border-[#EADFD3]/60 rounded-xl flex items-center justify-center mb-3 text-stone-300 font-mono text-xs font-bold group-hover:bg-red-50/50">Foto</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-stone-900 group-hover:text-brand-red transition truncate">Pangsit Goreng</h4>
+                                <div class="flex items-center justify-between mt-1.5 pt-1 border-t border-stone-100">
+                                    <span class="text-xs font-bold text-stone-800">Rp 14.000</span>
+                                    <span class="text-[10px] font-semibold text-[#2E8B57] bg-green-50 px-1.5 py-0.5 rounded">Sisa 24</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 6: Dimsum Mentai (Habis) -->
+                        <div class="prod-card bg-white rounded-2xl border border-[#EADFD3] p-3.5 shadow-sm opacity-50 cursor-not-allowed flex flex-col justify-between" data-nama="dimsum mentai" data-cat="dimsum kukus">
+                            <div class="w-full h-24 bg-[#FAF7F2] border border-[#EADFD3]/60 rounded-xl flex items-center justify-center mb-3 text-stone-300 font-mono text-xs font-bold">Foto</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-stone-900 truncate">Dimsum Mentai</h4>
+                                <div class="flex items-center justify-between mt-1.5 pt-1 border-t border-stone-100">
+                                    <span class="text-xs font-bold text-stone-800">Rp 20.000</span>
+                                    <span class="text-[10px] font-semibold text-brand-red bg-red-50 px-1.5 py-0.5 rounded">Habis</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SISI KANAN: KERANJANG PESANAN -->
+                <div class="lg:col-span-5 bg-white rounded-2xl border border-[#EADFD3] p-6 shadow-sm flex flex-col justify-between min-h-[580px]">
+                    <div>
+                        <div class="flex items-center justify-between border-b border-stone-100 pb-4 mb-4">
+                            <h3 class="text-sm font-bold text-stone-900 flex items-center gap-2">
+                                <span>Pesanan Aktif</span>
+                                <span id="cartCountBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">(3)</span>
+                            </h3>
+                            <button type="button" onclick="clearCart()" class="text-xs font-semibold text-brand-red hover:underline">Kosongkan</button>
+                        </div>
+
+                        <div id="cartList" class="space-y-3">
+                            <!-- Siomay Ayam x2 -->
+                            <div class="flex items-center justify-between p-3 bg-stone-50 rounded-xl border border-[#EADFD3]">
+                                <div class="flex-1 mr-2"><p class="text-xs font-bold text-stone-900">Siomay Ayam</p></div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden">
+                                        <button class="px-2 py-0.5 text-xs font-bold text-stone-600">&minus;</button>
+                                        <span class="px-2 text-xs font-bold text-stone-900">2</span>
+                                        <button class="px-2 py-0.5 text-xs font-bold text-stone-600">&plus;</button>
+                                    </div>
+                                    <span class="text-xs font-bold text-stone-900 min-w-[70px] text-right font-mono">Rp 30.000</span>
+                                </div>
+                            </div>
+                            <!-- Hakau Udang x1 -->
+                            <div class="flex items-center justify-between p-3 bg-stone-50 rounded-xl border border-[#EADFD3]">
+                                <div class="flex-1 mr-2"><p class="text-xs font-bold text-stone-900">Hakau Udang</p></div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden">
+                                        <button class="px-2 py-0.5 text-xs font-bold text-stone-600">&minus;</button>
+                                        <span class="px-2 text-xs font-bold text-stone-900">1</span>
+                                        <button class="px-2 py-0.5 text-xs font-bold text-stone-600">&plus;</button>
+                                    </div>
+                                    <span class="text-xs font-bold text-stone-900 min-w-[70px] text-right font-mono">Rp 18.000</span>
+                                </div>
+                            </div>
+                            <!-- Bakpao Coklat x3 -->
+                            <div class="flex items-center justify-between p-3 bg-stone-50 rounded-xl border border-[#EADFD3]">
+                                <div class="flex-1 mr-2"><p class="text-xs font-bold text-stone-900">Bakpao Coklat</p></div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden">
+                                        <button class="px-2 py-0.5 text-xs font-bold text-stone-600">&minus;</button>
+                                        <span class="px-2 text-xs font-bold text-stone-900">3</span>
+                                        <button class="px-2 py-0.5 text-xs font-bold text-stone-600">&plus;</button>
+                                    </div>
+                                    <span class="text-xs font-bold text-stone-900 min-w-[70px] text-right font-mono">Rp 36.000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Warning Banner Sesuai Mockup Frame 1 -->
+                        <div class="mt-4 p-3 rounded-xl bg-red-50 border border-red-100 text-brand-red text-xs flex items-center gap-2 font-medium">
+                            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            <span>2 produk mendekati batas stok minimum</span>
+                        </div>
+
+                        <!-- Total & Uang Diterima -->
+                        <div class="border-t border-stone-100 mt-6 pt-4 space-y-3">
+                            <div class="flex items-center justify-between text-xs text-stone-600">
+                                <span>Subtotal</span>
+                                <span class="font-bold text-stone-900">Rp 84.000</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="font-bold text-stone-900">Total</span>
+                                <span class="text-lg font-extrabold text-brand-red">Rp 84.000</span>
+                            </div>
+
+                            <div class="pt-2">
+                                <label class="block text-xs font-semibold text-stone-600 mb-1.5">Uang Diterima</label>
+                                <div class="relative">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">Rp</span>
+                                    <input type="text" value="100.000" class="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-[#EADFD3] rounded-xl text-xs font-bold text-stone-900 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs pt-1">
+                                <span class="font-medium text-stone-600">Kembalian:</span>
+                                <span class="font-bold text-[#2E8B57]">Rp 16.000</span>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Bawah -->
+                        <div class="flex items-center gap-3 pt-6">
+                            <button type="button" class="w-1/3 py-2.5 rounded-xl border border-[#EADFD3] text-stone-600 hover:bg-stone-50 text-xs font-semibold transition">Batal</button>
+                            <button type="button" onclick="bukaModalSukses()" class="w-2/3 py-2.5 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition">Simpan Transaksi</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== MODAL TRANSAKSI BERHASIL (MOCKUP FRAME 2) ==================== -->
+    <div id="modalSukses" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center shadow-2xl border border-[#EADFD3] space-y-5">
+            <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-[#2E8B57] flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-stone-900">Transaksi Berhasil</h3>
+                <p class="text-xs text-stone-400 mt-1 font-mono">TRX-0064 &middot; 24 Nov 2026, 14:32</p>
+            </div>
+            <div class="bg-stone-50 rounded-2xl p-4 text-xs space-y-2 border border-stone-100">
+                <div class="flex justify-between text-stone-600"><span>Total</span><span class="font-bold text-stone-900">Rp 84.000</span></div>
+                <div class="flex justify-between text-stone-600"><span>Dibayar</span><span class="font-bold text-stone-900">Rp 100.000</span></div>
+                <div class="flex justify-between text-stone-800 border-t border-stone-200 pt-2 font-bold"><span>Kembalian</span><span class="text-brand-red text-sm">Rp 16.000</span></div>
+            </div>
+            <div class="text-[11px] text-[#2E8B57] font-semibold flex items-center justify-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                <span>Pesanan telah dikirimkan ke Antrian Dapur</span>
+            </div>
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="alert('Mencetak struk transaksi TRX-0064...')" class="w-1/2 py-2.5 rounded-xl border border-[#EADFD3] text-stone-700 hover:bg-stone-50 text-xs font-semibold transition">Cetak Struk</button>
+                <button type="button" onclick="tutupModalSukses()" class="w-1/2 py-2.5 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition">Transaksi Baru</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/kasir.js"></script>
+    <script>
+        function bukaModalSukses() {
+            document.getElementById('modalSukses').classList.remove('hidden');
+        }
+        function tutupModalSukses() {
+            document.getElementById('modalSukses').classList.add('hidden');
+        }
+        function addToCart(nama, harga, stok) {
+            alert(`Menambahkan ${nama} ke keranjang pesanan.`);
+        }
+        function clearCart() {
+            alert('Keranjang pesanan dikosongkan.');
+        }
+        function filterKatalog() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cat = document.getElementById('kategoriSelect').value.toLowerCase();
+            const cards = document.querySelectorAll('.prod-card');
+
+            cards.forEach(c => {
+                const name = c.getAttribute('data-nama');
+                const cardCat = c.getAttribute('data-cat');
+                const matchName = name.includes(query);
+                const matchCat = cat === 'semua' || cardCat === cat;
+
+                if (matchName && matchCat) {
+                    c.style.display = '';
+                } else {
+                    c.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

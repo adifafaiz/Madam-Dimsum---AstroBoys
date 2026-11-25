@@ -95,6 +95,69 @@ class OwnerTest extends TestCase
         ]);
     }
 
+    public function test_owner_can_update_product_and_record_stock_adjustment(): void
+    {
+        $product = Product::create([
+            'nama' => 'Siomay Udang Edit',
+            'satuan' => 'Porsi',
+            'harga' => 16000,
+            'stok' => 20,
+            'stok_minimum' => 10,
+            'kategori' => 'Dimsum Kukus',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->owner)->post("/owner/produk/{$product->id}", [
+            'nama' => 'Siomay Udang Spesial',
+            'satuan' => 'Porsi',
+            'harga' => 18000,
+            'stok' => 25, // Penyesuaian stok +5
+            'stok_minimum' => 12,
+            'kategori' => 'Dimsum Kukus',
+            'alasan_koreksi' => 'Ditemukan stok fisik tambahan',
+        ]);
+
+        $response->assertRedirect('/owner/produk');
+        
+        $product->refresh();
+        $this->assertEquals('Siomay Udang Spesial', $product->nama);
+        $this->assertEquals(18000, $product->harga);
+        $this->assertEquals(25, $product->stok);
+        $this->assertEquals(12, $product->stok_minimum);
+
+        // Verifikasi tercatat di stock_movements (jenis: penyesuaian)
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product->id,
+            'jenis' => 'penyesuaian',
+            'qty' => 5,
+            'saldo_setelah' => 25,
+        ]);
+    }
+
+    public function test_owner_can_delete_product(): void
+    {
+        $product = Product::create([
+            'nama' => 'Pangsit Goreng Testing',
+            'satuan' => 'Porsi',
+            'harga' => 12000,
+            'stok' => 10,
+            'stok_minimum' => 5,
+            'kategori' => 'Dimsum Goreng',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->owner)->post("/owner/produk/{$product->id}/delete");
+        $response->assertRedirect('/owner/produk');
+
+        $product->refresh();
+        $this->assertFalse((bool) $product->is_active);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id' => $this->owner->id,
+            'aksi' => 'hapus_produk',
+        ]);
+    }
+
     public function test_non_owner_forbidden_from_owner_routes(): void
     {
         $response = $this->actingAs($this->kasir)->get('/owner/dashboard');

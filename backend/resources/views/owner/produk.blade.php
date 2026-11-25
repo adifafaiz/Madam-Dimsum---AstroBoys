@@ -47,13 +47,12 @@
         <!-- Action Buttons Sesuai Mockup -->
         <div class="flex items-center gap-3">
             <!-- Button Catat Stok Masuk -->
-            <button 
-                type="button" 
-                onclick="alert('Fitur Catat Stok Masuk (FR-24): Mencatat kiriman produk dari pemasok & menambah stok otomatis.')"
+            <a 
+                href="{{ route('owner.stok-masuk') }}" 
                 class="px-3.5 py-2 rounded-lg border border-[#EADFD3] bg-white text-xs font-semibold text-stone-700 hover:bg-stone-50 shadow-sm transition flex items-center gap-1.5"
             >
                 <span>+ Catat Stok Masuk</span>
-            </button>
+            </a>
 
             <!-- Button Tambah Produk (Membuka Frame 3) -->
             <button 
@@ -121,7 +120,7 @@
                                 @endif
                             </td>
 
-                            <!-- Aksi (Edit · Riwayat) -->
+                            <!-- Aksi (Edit · Riwayat · Hapus) -->
                             <td class="py-4 px-6 text-right whitespace-nowrap">
                                 <a href="javascript:void(0)" onclick="editProduk('{{ $prod->id }}', '{{ addslashes($prod->nama) }}', '{{ $prod->satuan }}', '{{ $prod->harga }}', '{{ $prod->stok }}', '{{ $prod->stok_minimum }}', '{{ $prod->kategori }}')" 
                                     class="text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline">
@@ -129,9 +128,16 @@
                                 </a>
                                 <span class="text-stone-300 mx-1.5">&middot;</span>
                                 <a href="javascript:void(0)" onclick="lihatRiwayat('{{ $prod->id }}', '{{ addslashes($prod->nama) }}')" 
-                                    class="text-xs font-semibold text-brand-red hover:underline">
+                                    class="text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline">
                                     Riwayat
                                 </a>
+                                <span class="text-stone-300 mx-1.5">&middot;</span>
+                                <form action="{{ route('owner.produk.delete', $prod->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus produk \'{{ addslashes($prod->nama) }}\'?\nProduk akan dinonaktifkan dari katalog dan penjualan (BR-11).')">
+                                    @csrf
+                                    <button type="submit" class="text-xs font-semibold text-brand-red hover:underline">
+                                        Hapus
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @empty
@@ -282,6 +288,154 @@
     </div>
 </div>
 
+<!-- ==================== MODAL EDIT PRODUK & KOREKSI STOK (FR-22) ==================== -->
+<div id="modalEditProduk" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 border border-[#EADFD3] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- Header Modal -->
+        <div class="flex items-center justify-between pb-4 border-b border-stone-100 mb-5">
+            <h3 class="text-base font-bold text-stone-900">Edit Produk</h3>
+            <button type="button" onclick="closeModalEditProduk()" class="text-stone-400 hover:text-stone-700 transition p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Form Edit Produk -->
+        <form id="formEditProduk" action="" method="POST" class="space-y-4">
+            @csrf
+
+            <!-- 1. Nama Produk -->
+            <div>
+                <label for="edit_nama" class="block text-xs font-semibold text-stone-600 mb-1.5">Nama produk</label>
+                <input 
+                    type="text" 
+                    name="nama" 
+                    id="edit_nama" 
+                    required 
+                    class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+                >
+            </div>
+
+            <!-- 2. Row: Satuan & Harga -->
+            <div class="grid grid-cols-2 gap-3.5">
+                <div>
+                    <label for="edit_satuan" class="block text-xs font-semibold text-stone-600 mb-1.5">Satuan</label>
+                    <input 
+                        type="text" 
+                        name="satuan" 
+                        id="edit_satuan" 
+                        required 
+                        class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+                    >
+                </div>
+                <div>
+                    <label for="edit_harga" class="block text-xs font-semibold text-stone-600 mb-1.5">Harga jual</label>
+                    <input 
+                        type="number" 
+                        name="harga" 
+                        id="edit_harga" 
+                        min="0"
+                        required 
+                        class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+                    >
+                </div>
+            </div>
+
+            <!-- 3. Row: Stok Saat Ini & Batas Minimum -->
+            <div class="grid grid-cols-2 gap-3.5">
+                <div>
+                    <label for="edit_stok" class="block text-xs font-semibold text-stone-600 mb-1.5">Stok saat ini</label>
+                    <input 
+                        type="number" 
+                        name="stok" 
+                        id="edit_stok" 
+                        min="0"
+                        required 
+                        class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+                    >
+                </div>
+                <div>
+                    <label for="edit_stok_minimum" class="block text-xs font-semibold text-stone-600 mb-1.5">Batas minimum</label>
+                    <input 
+                        type="number" 
+                        name="stok_minimum" 
+                        id="edit_stok_minimum" 
+                        min="0"
+                        required 
+                        class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+                    >
+                </div>
+            </div>
+
+            <!-- 4. Kategori Dropdown -->
+            <div>
+                <label for="edit_kategori" class="block text-xs font-semibold text-stone-600 mb-1.5">Kategori</label>
+                <select 
+                    name="kategori" 
+                    id="edit_kategori" 
+                    required 
+                    class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer"
+                >
+                    <option value="Dimsum Kukus">Dimsum Kukus</option>
+                    <option value="Dimsum Goreng">Dimsum Goreng</option>
+                    <option value="Bakpao">Bakpao</option>
+                    <option value="Minuman">Minuman</option>
+                </select>
+            </div>
+
+            <!-- 5. Alasan Koreksi (BR-02 & FR-22) -->
+            <div>
+                <label for="edit_alasan_koreksi" class="block text-xs font-semibold text-stone-600 mb-1.5">Keterangan / Alasan Koreksi</label>
+                <input 
+                    type="text" 
+                    name="alasan_koreksi" 
+                    id="edit_alasan_koreksi" 
+                    placeholder="Contoh: Penyesuaian stok fisik mingguan"
+                    class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red focus:border-brand-red"
+                >
+            </div>
+
+            <p class="text-[11px] text-stone-400 italic pt-1">
+                *Jika stok diubah, sistem akan otomatis mencatat penyesuaian stok di riwayat (BR-02).
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between pt-4 border-t border-stone-100">
+                <button 
+                    type="button" 
+                    id="btnHapusModal"
+                    onclick="hapusProdukDariModal()" 
+                    class="px-3.5 py-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-xs font-semibold text-brand-red transition"
+                >
+                    Hapus Produk
+                </button>
+                <div class="flex items-center gap-2.5">
+                    <button 
+                        type="button" 
+                        onclick="closeModalEditProduk()" 
+                        class="px-4 py-2.5 rounded-lg border border-[#EADFD3] text-xs font-semibold text-stone-600 hover:bg-stone-50 transition"
+                    >
+                        Batal
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-5 py-2.5 rounded-lg bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition"
+                    >
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Hidden Form Delete dari Modal -->
+        <form id="formDeleteModal" action="" method="POST" class="hidden">
+            @csrf
+        </form>
+    </div>
+</div>
+
 <!-- ==================== MODAL RIWAYAT STOK (FR-23) ==================== -->
 <div id="modalRiwayatStok" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 border border-[#EADFD3] shadow-2xl relative">
@@ -320,8 +474,37 @@
         document.getElementById('modalTambahProduk').classList.add('hidden');
     }
 
-    function closeModalRiwayat() {
-        document.getElementById('modalRiwayatStok').classList.add('hidden');
+    function closeModalEditProduk() {
+        document.getElementById('modalEditProduk').classList.add('hidden');
+    }
+
+    let currentEditId = null;
+    let currentEditNama = '';
+
+    function editProduk(id, nama, satuan, harga, stok, stokMin, kategori) {
+        currentEditId = id;
+        currentEditNama = nama;
+        const form = document.getElementById('formEditProduk');
+        form.action = `/owner/produk/${id}`;
+
+        document.getElementById('edit_nama').value = nama;
+        document.getElementById('edit_satuan').value = satuan;
+        document.getElementById('edit_harga').value = parseInt(harga);
+        document.getElementById('edit_stok').value = parseInt(stok);
+        document.getElementById('edit_stok_minimum').value = parseInt(stokMin);
+        document.getElementById('edit_kategori').value = kategori;
+        document.getElementById('edit_alasan_koreksi').value = '';
+
+        document.getElementById('modalEditProduk').classList.remove('hidden');
+    }
+
+    function hapusProdukDariModal() {
+        if (!currentEditId) return;
+        if (confirm(`Apakah Anda yakin ingin menghapus produk '${currentEditNama}'?\nProduk akan dinonaktifkan dari katalog dan penjualan (BR-11).`)) {
+            const form = document.getElementById('formDeleteModal');
+            form.action = `/owner/produk/${currentEditId}/delete`;
+            form.submit();
+        }
     }
 
     async function lihatRiwayat(productId, nama) {
@@ -354,10 +537,6 @@
         } catch (e) {
             container.innerHTML = '<p class="text-center py-6 text-red-500">Gagal memuat data riwayat.</p>';
         }
-    }
-
-    function editProduk(id, nama, satuan, harga, stok, stokMin, kategori) {
-        alert(`Edit Produk '${nama}' (FR-22):\nSatuan: ${satuan}\nHarga: Rp ${Number(harga).toLocaleString('id-ID')}\nStok Saat Ini: ${stok}\nBatas Minimum: ${stokMin}\n\n*Setiap perubahan stok akan wajib mengisi keterangan penyesuaian (BR-02 & FR-22).`);
     }
 </script>
 @endpush

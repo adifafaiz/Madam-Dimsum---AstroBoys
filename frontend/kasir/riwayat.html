@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Saya - Kasir - Madam Dimsum</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#C8372D',
+                            redHover: '#B22F26',
+                            redPink: '#E9A9A1',
+                            dark: '#2A211C',
+                            darkSidebar: '#2A211C',
+                            menuText: '#CDBFB3',
+                            lightBg: '#FBF7F2',
+                            border: '#EADFD3',
+                            secondary: '#8A7B70',
+                            safe: '#2E8B57',
+                            process: '#D9822B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/kasir.css">
+</head>
+<body class="min-h-screen flex antialiased bg-[#FBF7F2] text-[#2A211C]">
+
+    <!-- ==================== SIDEBAR KASIR (220px) ==================== -->
+    <aside class="w-[220px] bg-brand-dark flex flex-col justify-between shrink-0 min-h-screen text-white select-none fixed left-0 top-0 bottom-0 z-20">
+        <div>
+            <div class="h-16 flex items-center gap-3 px-5 border-b border-white/5">
+                <img src="../images/logo-madam-dimsum.jpg" alt="Madam Dimsum" class="w-8 h-8 rounded-lg shadow-sm object-cover">
+                <span class="font-bold text-white tracking-tight text-base">Madam Dimsum</span>
+            </div>
+
+            <nav class="p-3 space-y-1 text-[13px] font-medium">
+                <a href="transaksi.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                    <span>Transaksi</span>
+                </a>
+                <a href="cek-stok.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-brand-menuText hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                    <span>Cek Stok</span>
+                </a>
+                <a href="riwayat.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-brand-red text-white font-semibold shadow-sm transition">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Riwayat Saya</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5 text-[11px] text-stone-500">
+            DimsumKu v2 &middot; Tim Astroboys
+        </div>
+    </aside>
+
+    <!-- ==================== AREA UTAMA KANAN ==================== -->
+    <div class="ml-[220px] flex-1 flex flex-col min-w-0">
+
+        <!-- Header -->
+        <header class="h-16 bg-brand-lightBg border-b border-[#EADFD3] px-8 flex items-center justify-between sticky top-0 z-10">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight">Riwayat Saya</h1>
+
+            <div class="relative">
+                <button type="button" onclick="toggleUserDropdown()" 
+                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#EADFD3] bg-white text-xs font-semibold text-stone-800 hover:bg-stone-50 shadow-sm transition">
+                    <span>Kasir Rina</span>
+                    <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#EADFD3] py-1 z-30">
+                    <div class="px-4 py-2 border-b border-stone-100">
+                        <p class="text-xs font-bold text-stone-900">Rina</p>
+                        <p class="text-[11px] text-stone-500">Peran: Kasir</p>
+                    </div>
+                    <a href="../index.html" class="block px-4 py-2 text-xs font-semibold text-brand-red hover:bg-red-50 transition">Keluar</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content (Mockup Frame 4 Kasir) -->
+        <main class="flex-1 p-8 max-w-7xl">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                <!-- SISI KIRI: TABEL TRANSAKSI SAYA -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-center gap-3">
+                        <select class="w-full sm:w-auto px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-xl text-xs font-semibold text-stone-800 shadow-sm cursor-pointer focus:outline-none">
+                            <option>Tanggal</option>
+                            <option selected>Hari ini</option>
+                            <option>Kemarin</option>
+                        </select>
+                        <div class="relative flex-1 w-full">
+                            <input type="text" placeholder="No. transaksi / produk" class="w-full pl-9 pr-4 py-2.5 bg-white border border-[#EADFD3] rounded-xl text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red shadow-sm">
+                            <svg class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+                                    <tr>
+                                        <th class="py-3.5 px-6">No. Transaksi</th>
+                                        <th class="py-3.5 px-6">Waktu</th>
+                                        <th class="py-3.5 px-6">Item</th>
+                                        <th class="py-3.5 px-6 text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                                    <tr class="bg-red-50/40 font-semibold cursor-pointer">
+                                        <td class="py-4 px-6 font-bold text-stone-900">TRX-0064</td>
+                                        <td class="py-4 px-6 text-stone-500">14:32</td>
+                                        <td class="py-4 px-6 text-stone-600">3 produk</td>
+                                        <td class="py-4 px-6 font-bold text-stone-900 text-right">Rp 84.000</td>
+                                    </tr>
+                                    <tr class="hover:bg-stone-50/70 transition cursor-pointer">
+                                        <td class="py-4 px-6 font-bold text-stone-900">TRX-0063</td>
+                                        <td class="py-4 px-6 text-stone-500">14:20</td>
+                                        <td class="py-4 px-6 text-stone-600">2 produk</td>
+                                        <td class="py-4 px-6 font-bold text-stone-900 text-right">Rp 48.000</td>
+                                    </tr>
+                                    <tr class="hover:bg-stone-50/70 transition cursor-pointer">
+                                        <td class="py-4 px-6 font-bold text-stone-900">TRX-0062</td>
+                                        <td class="py-4 px-6 text-stone-500">13:50</td>
+                                        <td class="py-4 px-6 text-stone-600">2 produk</td>
+                                        <td class="py-4 px-6 font-bold text-stone-900 text-right">Rp 32.000</td>
+                                    </tr>
+                                    <tr class="hover:bg-stone-50/70 transition cursor-pointer">
+                                        <td class="py-4 px-6 font-bold text-stone-900">TRX-0061</td>
+                                        <td class="py-4 px-6 text-stone-500">13:10</td>
+                                        <td class="py-4 px-6 text-stone-600">1 produk</td>
+                                        <td class="py-4 px-6 font-bold text-stone-900 text-right">Rp 42.000</td>
+                                    </tr>
+                                    <tr class="hover:bg-stone-50/70 transition cursor-pointer">
+                                        <td class="py-4 px-6 font-bold text-stone-900">TRX-0060</td>
+                                        <td class="py-4 px-6 text-stone-500">12:15</td>
+                                        <td class="py-4 px-6 text-stone-600">2 produk</td>
+                                        <td class="py-4 px-6 font-bold text-stone-900 text-right">Rp 28.000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SISI KANAN: DETAIL TRX-0064 -->
+                <div class="lg:col-span-5 bg-white rounded-2xl border border-[#EADFD3] p-7 shadow-sm space-y-6">
+                    <div>
+                        <h3 class="text-sm font-bold text-stone-900">Detail TRX-0064</h3>
+                        <p class="text-xs text-stone-400 mt-1">24 Nov 2026, 14:32</p>
+                    </div>
+
+                    <div class="space-y-3 divide-y divide-stone-100 text-xs">
+                        <div class="flex items-center justify-between pt-3 first:pt-0">
+                            <div><span class="font-bold text-stone-900">Siomay Ayam</span><span class="text-stone-400 font-semibold ml-1">x2</span></div>
+                            <span class="font-bold text-stone-900 font-mono">Rp 30.000</span>
+                        </div>
+                        <div class="flex items-center justify-between pt-3">
+                            <div><span class="font-bold text-stone-900">Hakau Udang</span><span class="text-stone-400 font-semibold ml-1">x1</span></div>
+                            <span class="font-bold text-stone-900 font-mono">Rp 18.000</span>
+                        </div>
+                        <div class="flex items-center justify-between pt-3">
+                            <div><span class="font-bold text-stone-900">Bakpao Coklat</span><span class="text-stone-400 font-semibold ml-1">x3</span></div>
+                            <span class="font-bold text-stone-900 font-mono">Rp 36.000</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-stone-200 pt-4 flex items-center justify-between">
+                        <span class="text-xs font-bold text-stone-700">Total</span>
+                        <span class="text-base font-extrabold text-brand-red">Rp 84.000</span>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="button" onclick="alert('Mencetak ulang struk TRX-0064 dengan tanda [CETAK ULANG] (FR-15)...')" class="w-full py-2.5 rounded-xl border border-[#EADFD3] hover:bg-stone-50 text-stone-700 text-xs font-semibold flex items-center justify-center gap-2 transition">
+                            <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            <span>Cetak Ulang Struk</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="js/kasir.js"></script>
+</body>
+</html>
+
