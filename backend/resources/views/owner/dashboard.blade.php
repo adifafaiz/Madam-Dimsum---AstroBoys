@@ -50,7 +50,7 @@
     <!-- ==================== GRAFIK & RESTOCK ==================== -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        <section class="xl:col-span-2 kartu p-6" aria-labelledby="judulGrafik">
+        <section class="xl:col-span-2 kartu p-6 [overflow-x:clip]" aria-labelledby="judulGrafik">
             <div class="flex flex-wrap items-baseline justify-between gap-2 mb-6">
                 <h3 id="judulGrafik" class="kartu-judul">Penjualan 7 Hari Terakhir</h3>
                 <p class="text-[15px] text-brand-secondary">Total sepekan <b class="text-brand-ink font-semibold">{{ $rp($totalSepekan) }}</b></p>
@@ -100,7 +100,7 @@
             <div class="px-6 pt-6 pb-4 flex items-center justify-between gap-3">
                 <h3 id="judulRestock" class="kartu-judul">Riwayat Pemesanan</h3>
                 @if($produkRestockList->count())
-                    <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#FCE6E3] text-[#B0261D] text-[13px] font-semibold">
+                    <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#FCE6E3] text-[#B0261D] text-[13px] font-semibold whitespace-nowrap shrink-0">
                         <i data-lucide="triangle-alert" class="!w-3.5 !h-3.5"></i> Perlu Dipesan
                     </span>
                 @endif

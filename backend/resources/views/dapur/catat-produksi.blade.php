@@ -23,6 +23,15 @@
         '<option value="' . e($p->id) . '" data-nama="' . e($p->nama) . '" data-stok="' . e($p->stok) . '" data-min="' . e($p->stok_minimum) . '"'
         . ($i === $pilihIndex ? ' selected' : '') . '>' . e($p->nama) . '</option>'
     )->implode('');
+
+    // Baris awal: contoh isian hanya di lingkungan lokal (demo); selain itu satu baris kosong.
+    $barisAwal = app()->environment('local')
+        ? collect([[1, 20], [2, 15], [3, 20]])->filter(fn ($b) => $b[0] < $products->count())->values()->all()
+        : [];
+    if (!$barisAwal) $barisAwal = [[null, '']];
+
+    // Sesi bawaan mengikuti jam: sebelum 12.00 = pagi
+    $sesiAwal = old('sesi', now()->hour < 12 ? 'pagi' : 'sore');
 @endphp
 
 @section('content')
@@ -44,11 +53,11 @@
                         <legend class="label">Sesi</legend>
                         <div class="grid grid-cols-2 gap-2">
                             <label>
-                                <input type="radio" name="sesi" value="pagi" class="sr-only" required>
+                                <input type="radio" name="sesi" value="pagi" class="sr-only" required @checked($sesiAwal === 'pagi')>
                                 <span class="sesi-opsi"><i data-lucide="sunrise"></i> Pagi</span>
                             </label>
                             <label>
-                                <input type="radio" name="sesi" value="sore" class="sr-only" checked>
+                                <input type="radio" name="sesi" value="sore" class="sr-only" @checked($sesiAwal === 'sore')>
                                 <span class="sesi-opsi"><i data-lucide="sunset"></i> Sore</span>
                             </label>
                         </div>
@@ -62,14 +71,14 @@
                     </div>
 
                     <div id="itemsContainer" class="space-y-3">
-                        @foreach([[1, 20], [2, 15], [3, 20]] as $i => [$pilih, $qtyAwal])
+                        @foreach($barisAwal as $i => [$pilih, $qtyAwal])
                             <div class="item-row flex items-center gap-3">
                                 <select name="items[{{ $i }}][product_id]" class="product-select field flex-1 min-w-0 font-medium" onchange="updatePreview()" aria-label="Produk">
                                     {!! $opsiProduk($pilih) !!}
                                 </select>
                                 <div class="flex items-center rounded border border-brand-border bg-white overflow-hidden shrink-0">
                                     <button type="button" class="stepper-btn" onclick="ubahQty(this, -1)" aria-label="Kurangi"><i data-lucide="minus"></i></button>
-                                    <input type="number" name="items[{{ $i }}][qty]" value="{{ $qtyAwal }}" min="1" class="qty-input w-16 h-12 text-center text-lg font-bold text-brand-ink border-x border-brand-border focus:outline-none focus:bg-[#FCF1EF]" oninput="updatePreview()" aria-label="Jumlah porsi">
+                                    <input type="number" name="items[{{ $i }}][qty]" value="{{ $qtyAwal }}" min="1" required placeholder="0" class="qty-input w-16 h-12 text-center text-lg font-bold text-brand-ink border-x border-brand-border focus:outline-none focus:bg-[#FCF1EF]" oninput="updatePreview()" aria-label="Jumlah porsi">
                                     <button type="button" class="stepper-btn" onclick="ubahQty(this, 1)" aria-label="Tambah"><i data-lucide="plus"></i></button>
                                 </div>
                                 <button type="button" onclick="removeItem(this)" class="btn btn-ghost w-11 !px-0 shrink-0 text-brand-secondary hover:!text-brand-red" aria-label="Hapus baris"><i data-lucide="x"></i></button>
@@ -84,7 +93,7 @@
 
                 <div>
                     <label for="catatan" class="label">Catatan <span class="font-normal text-brand-secondary">(opsional)</span></label>
-                    <textarea name="catatan" id="catatan" rows="2" placeholder="Contoh: Produksi sesi 2, persiapan permintaan akhir pekan" class="field">Produksi sesi 2, persiapan permintaan akhir pekan</textarea>
+                    <textarea name="catatan" id="catatan" rows="2" placeholder="Contoh: Produksi sesi 2, persiapan permintaan akhir pekan" class="field">{{ old('catatan') }}</textarea>
                 </div>
             </div>
 

@@ -8,7 +8,7 @@
 @endphp
 
 @section('content')
-<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+<div class="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
 
     <!-- ==================== DAFTAR PENGGUNA ==================== -->
     <section class="kartu overflow-hidden" aria-labelledby="judulPengguna">
@@ -41,7 +41,7 @@
                                     <span class="w-9 h-9 rounded-full flex items-center justify-center font-semibold shrink-0 {{ $u->is_active ? 'bg-[#FCF1EF] text-brand-red' : 'bg-[#F3ECE4] text-brand-secondary' }}">
                                         {{ mb_strtoupper(mb_substr($u->name, 0, 1)) }}
                                     </span>
-                                    <span class="font-semibold {{ $u->is_active ? 'text-brand-ink' : '' }}">
+                                    <span class="font-semibold whitespace-nowrap {{ $u->is_active ? 'text-brand-ink' : '' }}">
                                         {{ $u->name }}
                                         @if($u->id === Auth::id())
                                             <span class="text-[13px] text-brand-red font-medium ml-1">(Anda)</span>
@@ -69,7 +69,7 @@
                             </td>
                             <td class="text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1">
-                                    <button type="button" class="btn btn-ghost btn-sm"
+                                    <button type="button" class="btn btn-ghost btn-sm !px-2.5" title="Edit akun"
                                             onclick="openModalEdit(this)"
                                             data-url="{{ route('owner.pengguna.update', $u) }}"
                                             data-id="{{ $u->id }}"
@@ -77,14 +77,14 @@
                                             data-username="{{ $u->username }}"
                                             data-role="{{ $u->role }}"
                                             data-self="{{ $u->id === Auth::id() ? '1' : '0' }}">
-                                        <i data-lucide="pencil" class="!w-4 !h-4"></i> Edit
+                                        <i data-lucide="pencil" class="!w-4 !h-4"></i><span class="sr-only">Edit {{ $u->name }}</span>
                                     </button>
-                                    <button type="button" class="btn btn-ghost btn-sm"
+                                    <button type="button" class="btn btn-ghost btn-sm !px-2.5" title="Reset password"
                                             onclick="openModalReset(this)"
                                             data-url="{{ route('owner.pengguna.reset', $u) }}"
                                             data-id="{{ $u->id }}"
                                             data-name="{{ $u->name }}">
-                                        <i data-lucide="key-round" class="!w-4 !h-4"></i> Reset Password
+                                        <i data-lucide="key-round" class="!w-4 !h-4"></i><span class="sr-only">Reset password {{ $u->name }}</span>
                                     </button>
                                     @if($u->id !== Auth::id())
                                         <form action="{{ route('owner.pengguna.toggle', $u->id) }}" method="POST" class="inline"
@@ -117,9 +117,9 @@
     </section>
 
     <!-- ==================== HAK AKSES PERAN ==================== -->
-    <aside class="kartu p-6 xl:sticky xl:top-[96px]" aria-labelledby="judulHakAkses">
+    <aside class="kartu p-6 2xl:sticky 2xl:top-[96px]" aria-labelledby="judulHakAkses">
         <h3 id="judulHakAkses" class="kartu-judul mb-4">Hak Akses Peran</h3>
-        <dl class="space-y-4">
+        <dl class="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-1 gap-4">
             @foreach([
                 ['owner', 'Owner', 'Dashboard, Produk & Stok, Pemasok, Laporan, Riwayat Transaksi, Pengguna, Pencadangan'],
                 ['kasir', 'Kasir', 'Transaksi, Cek Stok, Riwayat Saya'],

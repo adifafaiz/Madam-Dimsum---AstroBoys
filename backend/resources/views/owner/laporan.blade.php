@@ -36,7 +36,9 @@
 <style>
     .titik .tip { opacity: 0; transform: translate(-50%, 4px); transition: opacity .12s, transform .12s; }
     .titik:hover .tip, .titik:focus-visible .tip { opacity: 1; transform: translate(-50%, 0); }
-    .titik:hover .bulat, .titik:focus-visible .bulat { transform: scale(1.25); }
+    .titik:hover .bulat, .titik:focus-visible .bulat { transform: scale(1.25); opacity: 1; }
+    /* Periode panjang: titik bernilai 0 disembunyikan (muncul saat disorot) supaya garis tidak penuh manik-manik */
+    .titik .bulat.samar { opacity: 0; }
     @media print {
         aside, header, .no-print { display: none !important; }
         .ml-\[240px\] { margin-left: 0 !important; }
@@ -95,7 +97,7 @@
     <!-- ==================== TREN & TERLARIS ==================== -->
     <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
 
-        <section class="xl:col-span-3 kartu p-6" aria-labelledby="judulTren">
+        <section class="xl:col-span-3 kartu p-6 [overflow-x:clip]" aria-labelledby="judulTren">
             <div class="mb-5">
                 <h3 id="judulTren" class="kartu-judul">Tren Penjualan</h3>
                 <p class="text-[15px] text-brand-secondary">Pergerakan transaksi harian</p>
@@ -123,7 +125,7 @@
 
                             @foreach($titik as $t)
                                 <div class="titik absolute w-8 h-8 -ml-4 -mt-4 flex items-center justify-center" style="left: {{ $t['left'] }}%; top: {{ $t['top'] }}%" tabindex="0">
-                                    <span class="bulat w-2.5 h-2.5 rounded-full bg-brand-red ring-2 ring-white transition-transform"></span>
+                                    <span class="bulat w-2.5 h-2.5 rounded-full bg-brand-red ring-2 ring-white transition {{ $t['val'] <= 0 && $titik->count() > 8 ? 'samar' : '' }}"></span>
                                     <span class="tip pointer-events-none absolute left-1/2 bottom-full mb-1 px-2.5 py-1.5 rounded bg-brand-dark text-white text-[13px] whitespace-nowrap z-10">
                                         {{ $t['x'] }} &middot; {{ $rp($t['val']) }}
                                     </span>

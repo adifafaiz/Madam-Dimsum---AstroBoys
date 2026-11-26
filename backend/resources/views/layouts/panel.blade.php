@@ -12,7 +12,8 @@
 <body class="min-h-screen bg-brand-lightBg antialiased">
 
     <!-- ==================== SIDEBAR ==================== -->
-    <aside class="w-[240px] bg-brand-dark flex flex-col justify-between text-white select-none fixed inset-y-0 left-0 z-20">
+    <div id="latarMenu" onclick="tutupMenu()" class="hidden fixed inset-0 z-30 bg-[rgba(42,33,28,.55)] lg:hidden"></div>
+    <aside id="sidebar" class="w-[240px] bg-brand-dark flex flex-col justify-between text-white select-none fixed inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200 overflow-y-auto">
         <div>
             <div class="h-[72px] flex items-center gap-3 px-5 border-b border-white/[0.06]">
                 @include('partials.logo', ['class' => 'w-10 h-10 p-0.5'])
@@ -41,10 +42,13 @@
     </aside>
 
     <!-- ==================== AREA UTAMA ==================== -->
-    <div class="ml-[240px] min-w-0 flex flex-col min-h-screen">
+    <div class="lg:ml-[240px] min-w-0 flex flex-col min-h-screen">
 
-        <header class="min-h-[72px] bg-brand-lightBg/95 backdrop-blur border-b border-brand-border px-6 lg:px-8 py-3 flex items-center gap-6 sticky top-0 z-10">
-            <h1 class="font-display text-3xl font-semibold text-brand-ink mr-auto">
+        <header class="min-h-[72px] bg-brand-lightBg/95 backdrop-blur border-b border-brand-border px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3 sm:gap-6 sticky top-0 z-20">
+            <button type="button" onclick="bukaMenu()" class="lg:hidden w-11 h-11 -ml-1 flex items-center justify-center rounded border border-brand-border bg-white text-brand-ink" aria-label="Buka menu" aria-controls="sidebar">
+                <i data-lucide="menu"></i>
+            </button>
+            <h1 class="font-display text-2xl sm:text-3xl font-semibold text-brand-ink mr-auto min-w-0 truncate">
                 @yield('page_title', $peran)
             </h1>
 
@@ -56,7 +60,7 @@
                     <span class="w-7 h-7 rounded-full bg-brand-redSoft text-brand-red flex items-center justify-center">
                         <i data-lucide="{{ $ikonPeran }}" class="!w-4 !h-4"></i>
                     </span>
-                    <span>{{ Auth::user()->name ?? $peran }}</span>
+                    <span class="hidden sm:inline">{{ Auth::user()->name ?? $peran }}</span>
                     <i data-lucide="chevron-down" class="!w-4 !h-4 text-brand-secondary"></i>
                 </button>
 
@@ -76,7 +80,7 @@
             </div>
         </header>
 
-        <main class="flex-1 px-6 lg:px-8 py-6">
+        <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6">
             @if(session('success'))
                 <div class="mb-6 px-4 py-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 flex items-center gap-3" role="status">
                     <i data-lucide="circle-check" class="text-emerald-600"></i>
@@ -103,6 +107,16 @@
     </div>
 
     <script>
+        function bukaMenu() {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('latarMenu').classList.remove('hidden');
+        }
+        function tutupMenu() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('latarMenu').classList.add('hidden');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') tutupMenu(); });
+
         function toggleUserDropdown() {
             document.getElementById('userDropdown').classList.toggle('hidden');
         }

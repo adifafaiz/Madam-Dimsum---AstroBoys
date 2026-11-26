@@ -22,7 +22,7 @@
             </select>
         </form>
 
-        <div class="flex gap-3">
+        <div class="grid grid-cols-2 sm:flex gap-3">
             <a href="{{ route('owner.stok-masuk') }}" class="btn btn-secondary">
                 <i data-lucide="package-plus"></i> Catat Stok Masuk
             </a>

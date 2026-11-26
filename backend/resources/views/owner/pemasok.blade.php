@@ -23,7 +23,7 @@
 @endphp
 
 @section('content')
-<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] gap-6 items-start">
+<div class="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
 
     <!-- ==================== DAFTAR PEMASOK ==================== -->
     <section class="kartu overflow-hidden" aria-labelledby="judulPemasok">
@@ -44,7 +44,7 @@
                         <th>Pemasok</th>
                         <th>Kontak</th>
                         <th>Produk</th>
-                        <th>Kiriman terakhir</th>
+                        <th>Kiriman</th>
                         <th class="text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -61,7 +61,7 @@
                                     <span class="w-9 h-9 rounded-full bg-brand-lightBg border border-brand-border text-brand-secondary flex items-center justify-center shrink-0">
                                         <i data-lucide="truck" class="!w-4 !h-4"></i>
                                     </span>
-                                    <span class="font-semibold">{{ $sup->nama }}</span>
+                                    <span class="font-semibold whitespace-nowrap">{{ $sup->nama }}</span>
                                 </div>
                             </td>
                             <td class="whitespace-nowrap">
@@ -76,7 +76,7 @@
                                     <span class="text-brand-secondary">Belum ada</span>
                                 @endif
                             </td>
-                            <td>
+                            <td class="min-w-[180px]">
                                 @if($sup->products->count())
                                     {{ $sup->products->pluck('nama')->implode(', ') }}
                                 @else
@@ -92,20 +92,20 @@
                             </td>
                             <td class="text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1">
-                                    <button type="button" class="btn btn-ghost btn-sm"
+                                    <button type="button" class="btn btn-ghost btn-sm !px-2.5" title="Edit pemasok"
                                             onclick="openModalEditPemasok(this)"
                                             data-url="{{ route('owner.pemasok.update', $sup) }}"
                                             data-id="{{ $sup->id }}"
                                             data-nama="{{ $sup->nama }}"
                                             data-kontak="{{ $sup->kontak }}">
-                                        <i data-lucide="pencil" class="!w-4 !h-4"></i> Edit
+                                        <i data-lucide="pencil" class="!w-4 !h-4"></i><span class="sr-only">Edit {{ $sup->nama }}</span>
                                     </button>
                                     @if(!$dipakai)
                                         <form action="{{ route('owner.pemasok.destroy', $sup) }}" method="POST" class="inline"
                                               onsubmit="return confirm(this.dataset.pesan)" data-pesan="Hapus pemasok {{ $sup->nama }}?">
                                             @csrf
-                                            <button type="submit" class="btn btn-ghost btn-sm !text-brand-red">
-                                                <i data-lucide="trash-2" class="!w-4 !h-4"></i> Hapus
+                                            <button type="submit" class="btn btn-ghost btn-sm !px-2.5 !text-brand-red" title="Hapus pemasok">
+                                                <i data-lucide="trash-2" class="!w-4 !h-4"></i><span class="sr-only">Hapus {{ $sup->nama }}</span>
                                             </button>
                                         </form>
                                     @endif
@@ -130,7 +130,7 @@
     </section>
 
     <!-- ==================== KEBUTUHAN STOK ==================== -->
-    <aside class="struk xl:sticky xl:top-[96px]" aria-labelledby="judulKebutuhan">
+    <aside class="struk 2xl:sticky 2xl:top-[96px]" aria-labelledby="judulKebutuhan">
         <div class="px-6 pt-6 pb-4">
             <div class="flex items-center justify-between gap-2">
                 <h3 id="judulKebutuhan" class="kartu-judul">Kebutuhan Stok</h3>
@@ -141,13 +141,14 @@
             <p class="text-[15px] text-brand-secondary">Produk menipis &amp; habis &middot; jumlah pesan = 2&times; minimum</p>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-1 border-t-2 border-dashed border-brand-border overflow-hidden">
         @forelse($kebutuhanPerPemasok as $grup)
             @php
                 $pemasokGrup = $grup['pemasok'];
                 $waGrup = $pemasokGrup ? $nomorWa($pemasokGrup->kontak) : null;
                 $teks = $teksPesanan($pemasokGrup, $grup['produk']);
             @endphp
-            <div class="border-t-2 border-dashed border-brand-border">
+            <div class="border-b-2 md:border-r-2 2xl:border-r-0 border-dashed border-brand-border -mr-[2px] -mb-[2px]">
                 <div class="px-6 pt-4 flex items-center gap-2 text-[15px] font-semibold">
                     <i data-lucide="{{ $pemasokGrup ? 'truck' : 'circle-help' }}" class="!w-4 !h-4 text-brand-secondary"></i>
                     {{ $pemasokGrup ? $pemasokGrup->nama : 'Belum ada pemasok' }}
@@ -183,12 +184,13 @@
                 </div>
             </div>
         @empty
-            <div class="kosong border-t-2 border-dashed border-brand-border">
+            <div class="kosong col-span-full">
                 <i data-lucide="circle-check"></i>
                 <p class="kosong-judul">Stok aman semua</p>
                 <p class="kosong-sub">Belum ada produk yang perlu dipesan ulang.</p>
             </div>
         @endforelse
+        </div>
     </aside>
 
 </div>

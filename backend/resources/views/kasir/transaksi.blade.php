@@ -39,7 +39,7 @@
                 >
             </div>
 
-            <div class="flex gap-2 overflow-x-auto pb-1 lg:pb-0" role="group" aria-label="Kategori">
+            <div class="flex gap-2 overflow-x-auto xl:flex-wrap pb-1 xl:pb-0" role="group" aria-label="Kategori">
                 @foreach($categories as $cat)
                     <button type="button" class="chip" data-kategori="{{ $cat }}" aria-pressed="{{ $loop->first ? 'true' : 'false' }}" onclick="pilihKategori(this)">
                         {{ $cat }}

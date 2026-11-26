@@ -56,7 +56,9 @@
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
-    body { font-family: 'Inter', system-ui, sans-serif; font-size: 16px; line-height: 1.5; color: #2A211C; font-variant-numeric: tabular-nums; }
+    body { font-family: 'Inter', system-ui, sans-serif; font-size: 16px; line-height: 1.5; color: #2A211C; }
+    /* Angka tabular hanya di tempat berisi angka (pada Inter, tnum juga melebarkan tanda hubung di teks biasa) */
+    .tabel, .struk, input, select, b, strong, .font-bold, .font-semibold, .tabular-nums { font-variant-numeric: tabular-nums; }
     h1, h2, h3, .font-display { font-family: 'Fredoka', 'Inter', sans-serif; letter-spacing: 0; }
     [data-lucide], svg.lucide { width: 1.125rem; height: 1.125rem; stroke-width: 1.75; flex-shrink: 0; }
     /* Panel keranjang bergaya struk: pinggir putus-putus + lekukan sobekan di garis total. */
@@ -87,7 +89,7 @@
     .field-ikon > [data-lucide], .field-ikon > svg.lucide { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #8A7B70; pointer-events: none; }
     .field-ikon > .field { padding-left: 42px; }
 
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: 0 18px;
+    .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: 0 18px;
         border-radius: 6px; font-size: 15px; font-weight: 600; white-space: nowrap; border: 1px solid transparent;
         transition: background-color .15s, border-color .15s, color .15s; cursor: pointer; }
     .btn-lg { min-height: 48px; font-size: 16px; }
