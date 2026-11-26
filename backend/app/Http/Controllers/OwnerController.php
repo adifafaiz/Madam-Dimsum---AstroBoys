@@ -33,44 +33,58 @@ class OwnerController extends Controller
     {
         $this->checkOwnerAccess();
 
-        $today = Carbon::today();
-        $penjualanHariIni = Order::whereDate('waktu', $today)->where('status', '!=', 'batal')->sum('total');
-        if ($penjualanHariIni == 0) {
-            $penjualanHariIni = 1075000;
-        }
+        $hariIni = Carbon::today();
+        $kemarin = Carbon::yesterday();
 
-        $pendapatanBulanIni = Order::whereMonth('waktu', Carbon::now()->month)->where('status', '!=', 'batal')->sum('total');
-        $transaksiBulanIni = Order::whereMonth('waktu', Carbon::now()->month)->where('status', '!=', 'batal')->count();
-        if ($pendapatanBulanIni == 0) {
-            $pendapatanBulanIni = 38420000;
-            $transaksiBulanIni = 1240;
-        }
+        // Penjualan hari ini vs kemarin (transaksi batal tidak dihitung)
+        $penjualanHariIni = $this->totalPenjualan($hariIni->copy()->startOfDay(), $hariIni->copy()->endOfDay());
+        $penjualanKemarin = $this->totalPenjualan($kemarin->copy()->startOfDay(), $kemarin->copy()->endOfDay());
+        $persenVsKemarin = $penjualanKemarin > 0
+            ? round(($penjualanHariIni - $penjualanKemarin) / $penjualanKemarin * 100, 1)
+            : null;
+
+        // Pendapatan & jumlah transaksi bulan berjalan (bulan + tahun)
+        $awalBulan = $hariIni->copy()->startOfMonth();
+        $akhirBulan = $hariIni->copy()->endOfMonth();
+        $pendapatanBulanIni = $this->totalPenjualan($awalBulan, $akhirBulan);
+        $transaksiBulanIni = $this->orderAktif($awalBulan, $akhirBulan)->count();
 
         $stokMenipisCount = Product::where('is_active', true)->whereColumn('stok', '<', 'stok_minimum')->count();
         $produkRestockList = Product::where('is_active', true)
             ->whereColumn('stok', '<', 'stok_minimum')
             ->get();
 
-        $produkTerlarisNama = 'Siomay Ayam';
-        $produkTerlarisPorsi = 74;
+        // Produk terlaris hari ini
+        $terlaris = $this->produkTerlaris($hariIni->copy()->startOfDay(), $hariIni->copy()->endOfDay(), 1)->first();
+        $produkTerlarisNama = $terlaris['nama'] ?? '-';
+        $produkTerlarisPorsi = $terlaris['porsi'] ?? 0;
 
-        $chartDays = [
-            ['day' => 'Sen', 'sales' => 680000, 'height' => '48%'],
-            ['day' => 'Sel', 'sales' => 520000, 'height' => '36%'],
-            ['day' => 'Rab', 'sales' => 850000, 'height' => '60%'],
-            ['day' => 'Kam', 'sales' => 740000, 'height' => '52%'],
-            ['day' => 'Jum', 'sales' => 980000, 'height' => '70%'],
-            ['day' => 'Sab', 'sales' => 1420000, 'height' => '100%', 'is_highest' => true],
-            ['day' => 'Min', 'sales' => 1180000, 'height' => '83%'],
-        ];
+        // Penjualan 7 hari terakhir (termasuk hari ini)
+        $harian = $this->penjualanPerHari($hariIni->copy()->subDays(6)->startOfDay(), $hariIni->copy()->endOfDay());
+        $maksHarian = max(1, (float) $harian->max());
+        $namaHari = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        $chartDays = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $tgl = $hariIni->copy()->subDays($i);
+            $sales = (float) ($harian[$tgl->toDateString()] ?? 0);
+            $chartDays[] = [
+                'day' => $namaHari[$tgl->dayOfWeek],
+                'tanggal' => $tgl->toDateString(),
+                'sales' => $sales,
+                'height' => round($sales / $maksHarian * 100) . '%',
+                'is_highest' => $sales > 0 && $sales >= $maksHarian,
+            ];
+        }
 
-        $transaksiTerbaru = Order::with('user')->orderBy('waktu', 'desc')->take(6)->get();
+        $transaksiTerbaru = Order::with('user')->orderBy('waktu', 'desc')->take(5)->get();
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
                 'data' => [
                     'penjualan_hari_ini' => $penjualanHariIni,
+                    'penjualan_kemarin' => $penjualanKemarin,
+                    'persen_vs_kemarin' => $persenVsKemarin,
                     'pendapatan_bulan_ini' => $pendapatanBulanIni,
                     'transaksi_bulan_ini' => $transaksiBulanIni,
                     'stok_menipis_count' => $stokMenipisCount,
@@ -87,6 +101,8 @@ class OwnerController extends Controller
 
         return view('owner.dashboard', compact(
             'penjualanHariIni',
+            'penjualanKemarin',
+            'persenVsKemarin',
             'pendapatanBulanIni',
             'transaksiBulanIni',
             'stokMenipisCount',
@@ -96,6 +112,154 @@ class OwnerController extends Controller
             'produkRestockList',
             'transaksiTerbaru'
         ));
+    }
+
+    /* ---------- Helper perhitungan penjualan (dashboard, laporan, ekspor) ---------- */
+
+    /** Query transaksi yang tidak batal dalam rentang waktu. */
+    private function orderAktif(Carbon $mulai, Carbon $selesai)
+    {
+        return Order::where('status', '!=', 'batal')->whereBetween('waktu', [$mulai, $selesai]);
+    }
+
+    private function totalPenjualan(Carbon $mulai, Carbon $selesai): float
+    {
+        return (float) $this->orderAktif($mulai, $selesai)->sum('total');
+    }
+
+    /** Total penjualan per tanggal: koleksi 'Y-m-d' => total. */
+    private function penjualanPerHari(Carbon $mulai, Carbon $selesai)
+    {
+        return $this->orderAktif($mulai, $selesai)
+            ->get(['waktu', 'total'])
+            ->groupBy(fn ($o) => $o->waktu->toDateString())
+            ->map(fn ($grup) => (float) $grup->sum('total'));
+    }
+
+    /** Produk terlaris menurut porsi terjual: [nama, porsi, pct relatif terhadap peringkat 1]. */
+    private function produkTerlaris(Carbon $mulai, Carbon $selesai, int $limit = 5)
+    {
+        $rows = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'products.id', '=', 'order_items.product_id')
+            ->where('orders.status', '!=', 'batal')
+            ->whereBetween('orders.waktu', [$mulai, $selesai])
+            ->groupBy('order_items.product_id', 'products.nama')
+            ->selectRaw('products.nama as nama, SUM(order_items.qty) as porsi')
+            ->orderByDesc('porsi')
+            ->orderBy('products.nama')
+            ->limit($limit)
+            ->get();
+
+        $maks = max(1, (int) ($rows->first()->porsi ?? 0));
+
+        return $rows->map(fn ($r) => [
+            'nama' => $r->nama,
+            'porsi' => (int) $r->porsi,
+            'pct' => (int) round($r->porsi / $maks * 100),
+        ])->values();
+    }
+
+    /**
+     * Rentang laporan dari ?periode=Harian|Mingguan|Bulanan&tanggal=Y-m-d (default Bulanan, hari ini),
+     * beserta rentang periode sebelumnya untuk perbandingan.
+     */
+    private function rentangPeriode(Request $request): array
+    {
+        $periode = in_array($request->get('periode'), ['Harian', 'Mingguan', 'Bulanan'], true)
+            ? $request->get('periode')
+            : 'Bulanan';
+
+        $acuan = Carbon::today();
+        if ($request->filled('tanggal')) {
+            try {
+                $acuan = Carbon::createFromFormat('Y-m-d', (string) $request->get('tanggal'))->startOfDay();
+            } catch (\Throwable $e) {
+                $acuan = Carbon::today();
+            }
+        }
+
+        $fmt = fn (Carbon $c, string $f) => $c->copy()->locale('id')->translatedFormat($f);
+
+        switch ($periode) {
+            case 'Harian':
+                $mulai = $acuan->copy()->startOfDay();
+                $selesai = $acuan->copy()->endOfDay();
+                $mulaiLalu = $mulai->copy()->subDay();
+                $selesaiLalu = $selesai->copy()->subDay();
+                $label = $fmt($mulai, 'j F Y');
+                $labelLalu = $fmt($mulaiLalu, 'j F Y');
+                break;
+            case 'Mingguan':
+                $mulai = $acuan->copy()->startOfWeek(Carbon::MONDAY);
+                $selesai = $acuan->copy()->endOfWeek(Carbon::SUNDAY);
+                $mulaiLalu = $mulai->copy()->subWeek();
+                $selesaiLalu = $selesai->copy()->subWeek();
+                $label = $fmt($mulai, 'j M') . ' - ' . $fmt($selesai, 'j M Y');
+                $labelLalu = $fmt($mulaiLalu, 'j M') . ' - ' . $fmt($selesaiLalu, 'j M Y');
+                break;
+            default:
+                $mulai = $acuan->copy()->startOfMonth();
+                $selesai = $acuan->copy()->endOfMonth();
+                $mulaiLalu = $mulai->copy()->subMonthNoOverflow()->startOfMonth();
+                $selesaiLalu = $mulaiLalu->copy()->endOfMonth();
+                $label = $fmt($mulai, 'F Y');
+                $labelLalu = $fmt($mulaiLalu, 'F Y');
+        }
+
+        return compact('periode', 'acuan', 'mulai', 'selesai', 'mulaiLalu', 'selesaiLalu', 'label', 'labelLalu');
+    }
+
+    /** Ringkasan laporan untuk satu rentang dari rentangPeriode(). */
+    private function ringkasanLaporan(array $r): array
+    {
+        $totalPenjualan = $this->totalPenjualan($r['mulai'], $r['selesai']);
+        $jumlahTransaksi = $this->orderAktif($r['mulai'], $r['selesai'])->count();
+        $rataRataTransaksi = $jumlahTransaksi > 0 ? round($totalPenjualan / $jumlahTransaksi) : 0;
+
+        // Tren: per jam untuk laporan harian, per tanggal untuk mingguan/bulanan
+        $orders = $this->orderAktif($r['mulai'], $r['selesai'])->get(['waktu', 'total']);
+        $trendPoints = [];
+        if ($r['periode'] === 'Harian') {
+            $perJam = $orders->groupBy(fn ($o) => (int) $o->waktu->format('G'))->map(fn ($g) => (float) $g->sum('total'));
+            $jamAwal = min($perJam->keys()->min() ?? 8, 8);
+            $jamAkhir = max($perJam->keys()->max() ?? 20, 20);
+            for ($j = $jamAwal; $j <= $jamAkhir; $j++) {
+                $trendPoints[] = ['x' => sprintf('%02d:00', $j), 'val' => (float) ($perJam[$j] ?? 0)];
+            }
+        } else {
+            $perHari = $orders->groupBy(fn ($o) => $o->waktu->toDateString())->map(fn ($g) => (float) $g->sum('total'));
+            for ($d = $r['mulai']->copy(); $d->lte($r['selesai']); $d->addDay()) {
+                $trendPoints[] = [
+                    'x' => $d->copy()->locale('id')->translatedFormat('j M'),
+                    'val' => (float) ($perHari[$d->toDateString()] ?? 0),
+                ];
+            }
+        }
+
+        $produkTerlaris = $this->produkTerlaris($r['mulai'], $r['selesai'], 5)->all();
+
+        $penjualanLalu = $this->totalPenjualan($r['mulaiLalu'], $r['selesaiLalu']);
+        if ($penjualanLalu > 0) {
+            $persen = ($totalPenjualan - $penjualanLalu) / $penjualanLalu * 100;
+            $persentase = ($persen >= 0 ? '+' : '') . number_format($persen, 1, ',', '.') . '%';
+            $keterangan = $persen > 5 ? 'penjualan naik dibanding periode sebelumnya'
+                : ($persen < -5 ? 'penjualan turun dibanding periode sebelumnya' : 'penjualan relatif stabil');
+        } else {
+            $persentase = '-';
+            $keterangan = 'belum ada penjualan pada periode sebelumnya';
+        }
+
+        $perbandingan = [
+            'bulan_ini' => $totalPenjualan,
+            'bulan_lalu' => $penjualanLalu,
+            'label_ini' => $r['label'],
+            'label_lalu' => $r['labelLalu'],
+            'persentase' => $persentase,
+            'keterangan' => $keterangan,
+        ];
+
+        return compact('totalPenjualan', 'jumlahTransaksi', 'rataRataTransaksi', 'trendPoints', 'produkTerlaris', 'perbandingan');
     }
 
     /**
@@ -499,52 +663,31 @@ class OwnerController extends Controller
     {
         $this->checkOwnerAccess();
 
-        $periode = $request->get('periode', 'Bulanan');
-        $range = $request->get('range', '01 Nov - 24 Nov 2026');
+        $r = $this->rentangPeriode($request);
+        $periode = $r['periode'];
+        $range = $r['label'];
+        $tanggalAcuan = $r['acuan']->toDateString();
 
-        // Statistik Sesuai Mockup Frame 6
-        $totalPenjualan = 38420000;
-        $jumlahTransaksi = 1264;
-        $rataRataTransaksi = 30400;
-
-        // Data Tren Penjualan (Line Chart Data)
-        $trendPoints = [
-            ['x' => '1 Nov', 'val' => 45],
-            ['x' => '5 Nov', 'val' => 58],
-            ['x' => '10 Nov', 'val' => 52],
-            ['x' => '15 Nov', 'val' => 70],
-            ['x' => '18 Nov', 'val' => 65],
-            ['x' => '21 Nov', 'val' => 78],
-            ['x' => '24 Nov', 'val' => 88],
-        ];
-
-        // Produk Terlaris (Horizontal Bar)
-        $produkTerlaris = [
-            ['nama' => 'Siomay Ayam', 'porsi' => 490, 'pct' => 100],
-            ['nama' => 'Hakau Udang', 'porsi' => 310, 'pct' => 63],
-            ['nama' => 'Bakpao Coklat', 'porsi' => 180, 'pct' => 37],
-            ['nama' => 'Lumpia Udang', 'porsi' => 150, 'pct' => 30],
-            ['nama' => 'Pangsit Goreng', 'porsi' => 110, 'pct' => 22],
-        ];
-
-        // Perbandingan Periode
-        $perbandingan = [
-            'bulan_ini' => 38420000,
-            'bulan_lalu' => 34110000,
-            'persentase' => '+12.6%',
-            'keterangan' => 'tren penjualan naik, kondisi toko sehat',
-        ];
+        [
+            'totalPenjualan' => $totalPenjualan,
+            'jumlahTransaksi' => $jumlahTransaksi,
+            'rataRataTransaksi' => $rataRataTransaksi,
+            'trendPoints' => $trendPoints,
+            'produkTerlaris' => $produkTerlaris,
+            'perbandingan' => $perbandingan,
+        ] = $this->ringkasanLaporan($r);
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
-                'data' => compact('totalPenjualan', 'jumlahTransaksi', 'rataRataTransaksi', 'trendPoints', 'produkTerlaris', 'perbandingan'),
+                'data' => compact('periode', 'range', 'totalPenjualan', 'jumlahTransaksi', 'rataRataTransaksi', 'trendPoints', 'produkTerlaris', 'perbandingan'),
             ]);
         }
 
         return view('owner.laporan', compact(
             'periode',
             'range',
+            'tanggalAcuan',
             'totalPenjualan',
             'jumlahTransaksi',
             'rataRataTransaksi',
@@ -555,30 +698,56 @@ class OwnerController extends Controller
     }
 
     /**
-     * Ekspor Laporan Excel / CSV (FR-27)
+     * Ekspor Laporan Excel / CSV (FR-27, UAT-09)
+     * Mengikuti periode yang dipilih: ringkasan (total, jumlah transaksi, rata-rata),
+     * produk terlaris, lalu daftar transaksi periode tersebut.
      */
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
         $this->checkOwnerAccess();
 
-        $filename = 'Laporan_Penjualan_Madam_Dimsum_' . date('Ymd_His') . '.csv';
+        $r = $this->rentangPeriode($request);
+        $ringkasan = $this->ringkasanLaporan($r);
+        $orders = Order::with('user')
+            ->whereBetween('waktu', [$r['mulai'], $r['selesai']])
+            ->orderBy('waktu', 'asc')
+            ->get();
+
+        $filename = 'Laporan_Penjualan_Madam_Dimsum_' . $r['periode'] . '_' . $r['mulai']->format('Ymd') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $orders = Order::with('user')->orderBy('waktu', 'desc')->get();
-
-        $callback = function () use ($orders) {
+        $callback = function () use ($r, $ringkasan, $orders) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['No. Transaksi', 'Waktu', 'Kasir', 'Total (Rp)', 'Status']);
+            fwrite($handle, "\xEF\xBB\xBF"); // BOM supaya Excel membaca UTF-8
 
+            fputcsv($handle, ['Laporan Penjualan Madam Dimsum']);
+            fputcsv($handle, ['Periode', $r['periode'] . ' - ' . $r['label']]);
+            fputcsv($handle, ['Total Penjualan (Rp)', $ringkasan['totalPenjualan']]);
+            fputcsv($handle, ['Jumlah Transaksi', $ringkasan['jumlahTransaksi']]);
+            fputcsv($handle, ['Rata-rata per Transaksi (Rp)', $ringkasan['rataRataTransaksi']]);
+            fputcsv($handle, ['Dibanding ' . $r['labelLalu'], $ringkasan['perbandingan']['persentase']]);
+            fputcsv($handle, []);
+
+            fputcsv($handle, ['Produk Terlaris']);
+            fputcsv($handle, ['Peringkat', 'Produk', 'Porsi Terjual']);
+            foreach ($ringkasan['produkTerlaris'] as $i => $p) {
+                fputcsv($handle, [$i + 1, $p['nama'], $p['porsi']]);
+            }
+            fputcsv($handle, []);
+
+            fputcsv($handle, ['Daftar Transaksi']);
+            fputcsv($handle, ['No. Transaksi', 'Waktu', 'Kasir', 'Total (Rp)', 'Dibayar (Rp)', 'Kembalian (Rp)', 'Status']);
             foreach ($orders as $o) {
                 fputcsv($handle, [
                     $o->kode,
                     $o->waktu ? $o->waktu->format('Y-m-d H:i') : '-',
                     $o->user->name ?? 'Kasir',
                     $o->total,
+                    $o->dibayar,
+                    $o->kembalian,
                     $o->status,
                 ]);
             }

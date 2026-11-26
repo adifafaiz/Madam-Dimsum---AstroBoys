@@ -32,7 +32,9 @@
         </p>
         <h2 class="font-display text-3xl font-semibold mt-2"><span id="sapaanOwner">Halo</span>, {{ Auth::user()->name ?? 'Owner' }}.</h2>
         <p class="ringkasan mt-3 text-xl leading-relaxed text-brand-secondary max-w-5xl">
-            Penjualan hari ini <b class="sorot">{{ $rp($penjualanHariIni) }}</b>.
+            Penjualan hari ini <b class="sorot">{{ $rp($penjualanHariIni) }}</b>@if(!is_null($persenVsKemarin ?? null))<span>,
+                <span class="inline-flex items-baseline gap-1 {{ $persenVsKemarin >= 0 ? 'text-[#2E7D4F]' : 'text-[#B0261D]' }}"><i data-lucide="{{ $persenVsKemarin >= 0 ? 'trending-up' : 'trending-down' }}" class="!w-5 !h-5 self-center"></i><b class="!text-current">{{ $persenVsKemarin >= 0 ? 'naik' : 'turun' }} {{ number_format(abs($persenVsKemarin), 1, ',', '.') }}%</b></span>
+                dari kemarin</span>@endif.
             Bulan ini sudah <b>{{ $rp($pendapatanBulanIni) }}</b> dari <b>{{ number_format($transaksiBulanIni, 0, ',', '.') }} transaksi</b>.
             @if($adaTerlaris)
                 <b>{{ $produkTerlarisNama }}</b> paling laku hari ini ({{ $produkTerlarisPorsi }} porsi).
@@ -61,7 +63,7 @@
 
                 <div class="absolute inset-0 flex items-end gap-3 sm:gap-6 border-b border-brand-border">
                     @foreach($chartDays as $day)
-                        @php $tertinggi = $hariTertinggi && $day['sales'] === $hariTertinggi['sales']; @endphp
+                        @php $tertinggi = $day['sales'] > 0 && $hariTertinggi && $day['sales'] == $hariTertinggi['sales']; @endphp
                         <div class="kolom-batang relative flex-1 h-full flex flex-col items-center justify-end" tabindex="0">
                             <span class="tip pointer-events-none absolute left-1/2 z-10 -mt-1 px-2.5 py-1.5 rounded bg-brand-dark text-white text-[13px] whitespace-nowrap"
                                   style="bottom: calc({{ $day['height'] }} + 8px)">
