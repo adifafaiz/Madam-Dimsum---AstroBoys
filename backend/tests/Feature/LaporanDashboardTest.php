@@ -162,6 +162,19 @@ class LaporanDashboardTest extends TestCase
         $this->assertStringNotContainsString('TRX-0003', $csv);
     }
 
+    public function test_transaksi_pagi_wib_masuk_hari_ini(): void
+    {
+        $this->assertSame('Asia/Jakarta', config('app.timezone'));
+
+        // 06:30 WIB = 23:30 UTC hari sebelumnya; dengan UTC transaksi ini akan terhitung "kemarin".
+        Carbon::setTestNow(Carbon::parse('2026-11-26 06:30:00'));
+        $this->transaksi('2026-11-26 06:00', [[$this->siomay, 2]]);
+
+        $response = $this->actingAs($this->owner)->get('/owner/dashboard');
+        $this->assertEquals(30000, $response->viewData('penjualanHariIni'));
+        $this->assertEquals(0, $response->viewData('penjualanKemarin'));
+    }
+
     public function test_laporan_periode_tidak_valid_jatuh_ke_bulanan(): void
     {
         $this->actingAs($this->owner)->get('/owner/laporan?periode=Tahunan&tanggal=bukan-tanggal')
