@@ -42,7 +42,7 @@ class OwnerTest extends TestCase
     {
         $response = $this->actingAs($this->owner)->get('/owner/dashboard');
         $response->assertStatus(200);
-        $response->assertSee('Penjualan Hari Ini');
+        $response->assertSee('Penjualan hari ini');
         $response->assertSee('Penjualan 7 Hari Terakhir');
         $response->assertSee('Riwayat Pemesanan');
         $response->assertSee('Transaksi Terbaru');
@@ -64,7 +64,7 @@ class OwnerTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Produk & Stok');
         $response->assertSee('Siomay Ayam');
-        $response->assertSee('+ Tambah Produk');
+        $response->assertSee('Tambah Produk');
         $response->assertSee('Aman');
     }
 

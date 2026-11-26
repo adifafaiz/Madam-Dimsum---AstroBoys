@@ -4,93 +4,86 @@
 @section('page_title', 'Cek Stok')
 
 @section('content')
-<div class="space-y-6 max-w-7xl">
+<div class="space-y-5">
 
-    <!-- Filter & Pencarian (Mockup Frame 3 Kasir) -->
-    <div class="bg-white rounded-2xl border border-[#EADFD3] p-5 shadow-sm space-y-3.5">
-        <form action="{{ route('kasir.cek-stok') }}" method="GET" id="filterForm" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <!-- Search Bar -->
-            <div class="relative w-full sm:w-80">
-                <input 
-                    type="text" 
-                    name="search" 
-                    value="{{ request('search') }}"
-                    placeholder="Cari produk..." 
-                    class="w-full pl-9 pr-4 py-2 bg-stone-50 border border-[#EADFD3] rounded-xl text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red"
-                >
-                <svg class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </div>
+    <form action="{{ route('kasir.cek-stok') }}" method="GET" id="filterForm" class="flex flex-col lg:flex-row lg:items-center gap-3">
+        <div class="relative lg:w-96">
+            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-secondary pointer-events-none"></i>
+            <input
+                type="text"
+                name="search"
+                value="{{ request('search') }}"
+                placeholder="Cari produk, tekan Enter…"
+                class="w-full h-12 pl-11 pr-4 bg-white border border-brand-border rounded text-base text-brand-ink placeholder-[#B9ABA0] focus:outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/15"
+            >
+        </div>
 
-            <!-- Checkbox Filter: Hanya tampilkan yang perlu diproduksi atau sudah habis -->
-            <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-stone-700">
-                    <input 
-                        type="checkbox" 
-                        name="hanya_perlu_produksi" 
-                        value="1" 
-                        {{ request('hanya_perlu_produksi') ? 'checked' : '' }}
-                        onchange="document.getElementById('filterForm').submit()"
-                        class="w-4 h-4 rounded border-stone-300 text-brand-red focus:ring-brand-red accent-brand-red"
-                    >
-                    <span>Hanya tampilkan yang perlu diproduksi atau sudah habis</span>
-                </label>
-            </div>
-        </form>
-    </div>
+        <label class="inline-flex items-center gap-3 h-12 px-4 rounded border border-brand-border bg-white cursor-pointer select-none text-[15px] font-medium hover:border-[#D9C8B8] has-[:checked]:border-brand-red has-[:checked]:bg-[#FCF1EF]">
+            <input
+                type="checkbox"
+                name="hanya_perlu_produksi"
+                value="1"
+                {{ request('hanya_perlu_produksi') ? 'checked' : '' }}
+                onchange="document.getElementById('filterForm').submit()"
+                class="w-[18px] h-[18px] accent-brand-red"
+            >
+            <span>Hanya tampilkan yang perlu diproduksi atau sudah habis</span>
+        </label>
 
-    <!-- Tabel Cek Stok Kasir (Frame 3) -->
-    <div class="bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
+        <p class="lg:ml-auto text-[15px] text-brand-secondary flex items-center gap-2">
+            <span class="relative inline-block w-6 h-2 rounded-full bg-[#F0E7DD]">
+                <span class="absolute -top-1 -bottom-1 left-1/2 w-0.5 -ml-px bg-[#8A7B70]/60 rounded-full"></span>
+            </span>
+            garis = batas minimum
+        </p>
+    </form>
+
+    <div class="bg-white rounded border border-brand-border overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+            <table class="w-full text-left text-[15px]">
+                <thead class="bg-brand-lightBg text-[13px] uppercase tracking-wide text-brand-secondary border-b border-brand-border">
                     <tr>
-                        <th class="py-3.5 px-6">Produk</th>
-                        <th class="py-3.5 px-6">Satuan</th>
-                        <th class="py-3.5 px-6">Stok Tersedia</th>
-                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3 px-5 font-semibold">Produk</th>
+                        <th class="py-3 px-5 font-semibold">Satuan</th>
+                        <th class="py-3 px-5 font-semibold">Stok Tersedia</th>
+                        <th class="py-3 px-5 font-semibold">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                <tbody class="divide-y divide-brand-border">
                     @forelse($products as $product)
-                        <tr class="hover:bg-stone-50/70 transition">
-                            <!-- Nama Produk -->
-                            <td class="py-4 px-6 font-bold text-stone-900">
-                                {{ $product->nama }}
+                        <tr class="hover:bg-brand-lightBg/60 transition-colors">
+                            <td class="py-3 px-5">
+                                <div class="flex items-center gap-3">
+                                    @include('partials.foto-produk', ['produk' => $product, 'class' => 'w-11 h-11 rounded shrink-0', 'ikon' => 'w-7 h-7'])
+                                    <span class="font-semibold text-brand-ink">{{ $product->nama }}</span>
+                                </div>
                             </td>
-
-                            <!-- Satuan -->
-                            <td class="py-4 px-6 text-stone-500">
-                                {{ $product->satuan }}
+                            <td class="py-3 px-5 text-brand-secondary">{{ $product->satuan }}</td>
+                            <td class="py-3 px-5">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-10 text-right text-lg font-bold {{ $product->stok <= 0 ? 'text-brand-red' : ($product->stok < $product->stok_minimum ? 'text-[#B4641A]' : 'text-brand-ink') }}">{{ $product->stok }}</span>
+                                    @include('partials.bar-stok', ['produk' => $product])
+                                    <span class="text-[13px] text-brand-secondary whitespace-nowrap">min {{ $product->stok_minimum }}</span>
+                                </div>
                             </td>
-
-                            <!-- Stok Tersedia -->
-                            <td class="py-4 px-6 font-bold {{ $product->stok <= 0 ? 'text-brand-red' : ($product->stok < $product->stok_minimum ? 'text-[#D9822B]' : 'text-stone-900') }}">
-                                {{ $product->stok }}
-                            </td>
-
-                            <!-- Status Stok (BR-03) -->
-                            <td class="py-4 px-6">
-                                @if($product->status_stok === 'Aman')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#2E8B57] bg-[#2E8B57]/10 border border-[#2E8B57]/20">
-                                        Aman
-                                    </span>
-                                @elseif($product->status_stok === 'Menipis')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#D9822B] bg-[#D9822B]/10 border border-[#D9822B]/20">
-                                        Menipis
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-brand-red bg-brand-red/10 border border-brand-red/20">
-                                        Habis
-                                    </span>
-                                @endif
+                            <td class="py-3 px-5">
+                                @include('partials.status-stok', ['status' => $product->status_stok])
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="py-8 text-center text-stone-400">
-                                Tidak ada produk yang sesuai kriteria pencarian.
+                            <td colspan="4" class="py-14">
+                                <div class="flex flex-col items-center text-center">
+                                    <i data-lucide="package-search" class="!w-10 !h-10 text-[#C9BBAE]"></i>
+                                    <p class="mt-3 text-lg font-semibold">Tidak ada produk yang cocok</p>
+                                    <p class="text-brand-secondary">
+                                        @if(request('hanya_perlu_produksi'))
+                                            Kabar baik &mdash; semua stok masih aman.
+                                        @else
+                                            Coba kata kunci lain.
+                                        @endif
+                                    </p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
@@ -101,4 +94,3 @@
 
 </div>
 @endsection
-

@@ -3,196 +3,191 @@
 @section('title', 'Laporan Penjualan - Owner')
 @section('page_title', 'Laporan Penjualan')
 
+@php
+    $rp = fn ($n) => 'Rp ' . number_format($n, 0, ',', '.');
+
+    // Titik grafik tren dari $trendPoints (koordinat dalam persen).
+    $tren = collect($trendPoints ?? []);
+    $maxTren = max(1, (int) $tren->max('val'));
+    $skalaAtas = (int) (ceil($maxTren * 1.15 / 10) * 10);
+    $jumlahTitik = max(1, $tren->count() - 1);
+    $titik = $tren->values()->map(fn ($p, $i) => [
+        'x' => $p['x'], 'val' => $p['val'],
+        'left' => round($i / $jumlahTitik * 100, 2),
+        'top' => round(100 - $p['val'] / $skalaAtas * 100, 2),
+    ]);
+    $garis = $titik->map(fn ($t) => $t['left'] . ',' . $t['top'])->implode(' ');
+    $area = $titik->count() ? '0,100 ' . $garis . ' 100,100' : '';
+
+    $totalPorsiTerlaris = collect($produkTerlaris)->sum('porsi');
+    $naik = !str_starts_with(trim((string) ($perbandingan['persentase'] ?? '')), '-');
+@endphp
+
+@push('styles')
+<style>
+    .titik .tip { opacity: 0; transform: translate(-50%, 4px); transition: opacity .12s, transform .12s; }
+    .titik:hover .tip, .titik:focus-visible .tip { opacity: 1; transform: translate(-50%, 0); }
+    .titik:hover .bulat, .titik:focus-visible .bulat { transform: scale(1.25); }
+    @media print {
+        aside, header, .no-print { display: none !important; }
+        .ml-\[240px\] { margin-left: 0 !important; }
+        body { background: #fff; }
+    }
+</style>
+@endpush
+
 @section('content')
-<div class="space-y-6 max-w-7xl">
+<div class="space-y-6">
 
-    <!-- ==================== FILTER & EKSPOR BAR (FRAME 6) ==================== -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <!-- Filter Periode & Rentang Tanggal -->
-        <div class="flex flex-wrap items-center gap-3">
-            <!-- Rentang Tanggal Dropdown -->
-            <div class="relative">
-                <button type="button" class="flex items-center gap-2 bg-white border border-[#EADFD3] rounded-lg px-3.5 py-2 text-xs font-semibold text-stone-800 shadow-sm hover:bg-stone-50 transition">
-                    <span>{{ $range }}</span>
-                    <svg class="w-3.5 h-3.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-            </div>
+    <!-- ==================== FILTER & EKSPOR ==================== -->
+    <div class="flex flex-col lg:flex-row lg:items-center gap-3 no-print">
+        <form action="{{ route('owner.laporan') }}" method="GET" class="flex flex-wrap items-center gap-3">
+            <span class="inline-flex items-center gap-2 h-12 px-4 rounded border border-brand-border bg-white text-base">
+                <i data-lucide="calendar-range" class="text-brand-secondary"></i>
+                {{ $range }}
+            </span>
+            <select name="periode" onchange="this.form.submit()" class="field !w-44" aria-label="Periode">
+                <option value="Harian" {{ $periode === 'Harian' ? 'selected' : '' }}>Harian</option>
+                <option value="Mingguan" {{ $periode === 'Mingguan' ? 'selected' : '' }}>Mingguan</option>
+                <option value="Bulanan" {{ $periode === 'Bulanan' ? 'selected' : '' }}>Bulanan</option>
+            </select>
+        </form>
 
-            <!-- Periode Dropdown -->
-            <div class="relative">
-                <select 
-                    onchange="this.form ? this.form.submit() : null"
-                    class="appearance-none bg-white border border-[#EADFD3] rounded-lg pl-3.5 pr-8 py-2 text-xs font-semibold text-stone-800 shadow-sm focus:outline-none focus:ring-1 focus:ring-brand-red cursor-pointer"
-                >
-                    <option value="Harian" {{ $periode === 'Harian' ? 'selected' : '' }}>Harian</option>
-                    <option value="Mingguan" {{ $periode === 'Mingguan' ? 'selected' : '' }}>Mingguan</option>
-                    <option value="Bulanan" {{ $periode === 'Bulanan' ? 'selected' : '' }}>Bulanan</option>
-                </select>
-                <svg class="w-3.5 h-3.5 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </div>
-        </div>
-
-        <!-- Tombol Ekspor Sesuai Mockup -->
-        <div class="flex items-center gap-2.5">
-            <!-- Ekspor PDF -->
-            <button 
-                type="button" 
-                onclick="window.print()" 
-                class="px-4 py-2 rounded-lg border border-[#EADFD3] bg-white hover:bg-stone-50 text-xs font-semibold text-stone-700 shadow-sm transition flex items-center gap-1.5"
-            >
-                <svg class="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span>Ekspor PDF</span>
+        <div class="flex gap-2.5 lg:ml-auto">
+            <button type="button" onclick="window.print()" class="btn btn-secondary">
+                <i data-lucide="file-text" class="text-brand-red"></i> Ekspor PDF
             </button>
-
-            <!-- Ekspor Excel -->
-            <a 
-                href="{{ route('owner.laporan.excel') }}" 
-                class="px-4 py-2 rounded-lg border border-[#EADFD3] bg-white hover:bg-stone-50 text-xs font-semibold text-stone-700 shadow-sm transition flex items-center gap-1.5"
-            >
-                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Ekspor Excel</span>
+            <a href="{{ route('owner.laporan.excel') }}" class="btn btn-secondary">
+                <i data-lucide="file-spreadsheet" class="text-[#2E7D4F]"></i> Ekspor Excel
             </a>
         </div>
     </div>
 
-    <!-- ==================== 3 KARTU RINGKASAN LAPORAN ==================== -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Total Penjualan -->
-        <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-            <p class="text-xs font-semibold text-stone-500 mb-1">Total Penjualan</p>
-            <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">
-                Rp {{ number_format($totalPenjualan, 0, ',', '.') }}
-            </h3>
+    <!-- ==================== RINGKASAN ==================== -->
+    <section class="kartu grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-brand-border" aria-label="Ringkasan periode">
+        <div class="p-6">
+            <p class="text-[15px] text-brand-secondary">Total Penjualan</p>
+            <p class="font-display text-4xl font-semibold mt-1 text-brand-ink">{{ $rp($totalPenjualan) }}</p>
         </div>
-
-        <!-- Jumlah Transaksi -->
-        <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-            <p class="text-xs font-semibold text-stone-500 mb-1">Jumlah Transaksi</p>
-            <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">
-                {{ number_format($jumlahTransaksi, 0, ',', '.') }}
-            </h3>
+        <div class="p-6">
+            <p class="text-[15px] text-brand-secondary">Jumlah Transaksi</p>
+            <p class="font-display text-4xl font-semibold mt-1">{{ number_format($jumlahTransaksi, 0, ',', '.') }}</p>
         </div>
-
-        <!-- Rata-rata/Transaksi -->
-        <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-            <p class="text-xs font-semibold text-stone-500 mb-1">Rata-rata/Transaksi</p>
-            <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">
-                Rp {{ number_format($rataRataTransaksi, 0, ',', '.') }}
-            </h3>
+        <div class="p-6">
+            <p class="text-[15px] text-brand-secondary">Rata-rata/Transaksi</p>
+            <p class="font-display text-4xl font-semibold mt-1">{{ $rp($rataRataTransaksi) }}</p>
         </div>
-    </div>
+    </section>
 
-    <!-- ==================== BAGIAN TENGAH (TREN & PRODUK TERLARIS) ==================== -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- ==================== TREN & TERLARIS ==================== -->
+    <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
 
-        <!-- Kiri: Tren Penjualan (Line Chart SVG) -->
-        <div class="bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm flex flex-col justify-between">
-            <div class="mb-4">
-                <h4 class="text-sm font-bold text-stone-900">Tren Penjualan</h4>
-                <p class="text-xs text-stone-400">Pergerakan transaksi harian</p>
+        <section class="xl:col-span-3 kartu p-6" aria-labelledby="judulTren">
+            <div class="mb-5">
+                <h3 id="judulTren" class="kartu-judul">Tren Penjualan</h3>
+                <p class="text-[15px] text-brand-secondary">Pergerakan transaksi harian</p>
             </div>
 
-            <!-- SVG Line Chart Sesuai Mockup Frame 6 -->
-            <div class="h-56 relative w-full pt-4">
-                <svg class="w-full h-full overflow-visible" viewBox="0 0 500 180" preserveAspectRatio="none">
-                    <!-- Area Fill Subtle Gradient -->
-                    <defs>
-                        <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#C8372D" stop-opacity="0.15"/>
-                            <stop offset="100%" stop-color="#C8372D" stop-opacity="0.0"/>
-                        </linearGradient>
-                    </defs>
+            @if($titik->count())
+                <div class="flex gap-3">
+                    {{-- Sumbu Y --}}
+                    <div class="relative w-8 h-60 text-[13px] text-brand-secondary text-right" aria-hidden="true">
+                        <span class="absolute right-0 -top-2">{{ $skalaAtas }}</span>
+                        <span class="absolute right-0 top-1/2 -translate-y-1/2">{{ $skalaAtas / 2 }}</span>
+                        <span class="absolute right-0 -bottom-2">0</span>
+                    </div>
 
-                    <!-- Grid Horizontal Lines -->
-                    <line x1="0" y1="40" x2="500" y2="40" stroke="#FAF7F2" stroke-width="1.5" />
-                    <line x1="0" y1="90" x2="500" y2="90" stroke="#FAF7F2" stroke-width="1.5" />
-                    <line x1="0" y1="140" x2="500" y2="140" stroke="#FAF7F2" stroke-width="1.5" />
+                    <div class="flex-1 min-w-0">
+                        <div class="relative h-60" aria-hidden="true">
+                            <div class="absolute inset-x-0 top-0 border-t border-dashed border-[#F0E7DD]"></div>
+                            <div class="absolute inset-x-0 top-1/2 border-t border-dashed border-[#F0E7DD]"></div>
+                            <div class="absolute inset-x-0 bottom-0 border-t border-brand-border"></div>
 
-                    <!-- Filled Area -->
-                    <polygon points="0,120 70,100 140,115 220,70 300,85 390,45 480,25 480,180 0,180" fill="url(#trendGradient)" />
+                            <svg class="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <polygon points="{{ $area }}" fill="#C8372D" fill-opacity="0.07"/>
+                                <polyline points="{{ $garis }}" fill="none" stroke="#C8372D" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+                            </svg>
 
-                    <!-- Red Line -->
-                    <polyline 
-                        fill="none" 
-                        stroke="#C8372D" 
-                        stroke-width="2.5" 
-                        stroke-linecap="round" 
-                        stroke-linejoin="round"
-                        points="0,120 70,100 140,115 220,70 300,85 390,45 480,25" 
-                    />
+                            @foreach($titik as $t)
+                                <div class="titik absolute w-8 h-8 -ml-4 -mt-4 flex items-center justify-center" style="left: {{ $t['left'] }}%; top: {{ $t['top'] }}%" tabindex="0">
+                                    <span class="bulat w-2.5 h-2.5 rounded-full bg-brand-red ring-2 ring-white transition-transform"></span>
+                                    <span class="tip pointer-events-none absolute left-1/2 bottom-full mb-1 px-2.5 py-1.5 rounded bg-brand-dark text-white text-[13px] whitespace-nowrap z-10">
+                                        {{ $t['x'] }} &middot; {{ $t['val'] }}
+                                    </span>
+                                </div>
+                            @endforeach
 
-                    <!-- Points -->
-                    <circle cx="0" cy="120" r="3.5" fill="#C8372D" />
-                    <circle cx="70" cy="100" r="3.5" fill="#C8372D" />
-                    <circle cx="140" cy="115" r="3.5" fill="#C8372D" />
-                    <circle cx="220" cy="70" r="3.5" fill="#C8372D" />
-                    <circle cx="300" cy="85" r="3.5" fill="#C8372D" />
-                    <circle cx="390" cy="45" r="3.5" fill="#C8372D" />
-                    <circle cx="480" cy="25" r="4.5" fill="#C8372D" stroke="#fff" stroke-width="2" />
-                </svg>
-            </div>
-
-            <!-- X-axis Labels -->
-            <div class="flex items-center justify-between pt-3 text-[11px] font-medium text-stone-400">
-                <span>01 Nov</span>
-                <span>08 Nov</span>
-                <span>15 Nov</span>
-                <span>24 Nov</span>
-            </div>
-        </div>
-
-        <!-- Kanan: Produk Terlaris (Horizontal Bars) -->
-        <div class="bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm flex flex-col justify-between">
-            <div class="mb-4">
-                <h4 class="text-sm font-bold text-stone-900">Produk Terlaris</h4>
-                <p class="text-xs text-stone-400">Volume penjualan tertinggi</p>
-            </div>
-
-            <!-- Horizontal Bars Sesuai Mockup Frame 6 -->
-            <div class="space-y-4 pt-1">
-                @foreach($produkTerlaris as $item)
-                    <div>
-                        <div class="flex items-center justify-between text-xs font-semibold mb-1.5">
-                            <span class="text-stone-800">{{ $item['nama'] }}</span>
-                            <span class="text-stone-500 font-normal">{{ $item['porsi'] }} porsi</span>
+                            @php $akhir = $titik->last(); @endphp
+                            <span class="absolute -translate-x-full -translate-y-full -mt-2 -ml-2 text-[13px] font-semibold text-brand-ink whitespace-nowrap" style="left: {{ $akhir['left'] }}%; top: {{ $akhir['top'] }}%">{{ $akhir['val'] }}</span>
                         </div>
-                        <div class="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                            <div 
-                                style="width: {{ $item['pct'] }}%;" 
-                                class="h-full bg-brand-red rounded-full transition-all duration-500"
-                            ></div>
+
+                        <div class="relative h-6 mt-2 text-[13px] text-brand-secondary" aria-hidden="true">
+                            @foreach($titik as $t)
+                                <span class="absolute -translate-x-1/2 whitespace-nowrap {{ $loop->first ? '!translate-x-0' : '' }} {{ $loop->last ? '!-translate-x-full' : '' }}" style="left: {{ $t['left'] }}%">{{ $t['x'] }}</span>
+                            @endforeach
                         </div>
                     </div>
-                @endforeach
+                </div>
+
+                <table class="sr-only">
+                    <caption>Tren penjualan</caption>
+                    <thead><tr><th>Tanggal</th><th>Nilai</th></tr></thead>
+                    <tbody>
+                        @foreach($titik as $t)<tr><td>{{ $t['x'] }}</td><td>{{ $t['val'] }}</td></tr>@endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="kosong"><i data-lucide="chart-line"></i><p class="kosong-judul">Belum ada data tren</p><p class="kosong-sub">Grafik muncul setelah ada transaksi pada periode ini.</p></div>
+            @endif
+        </section>
+
+        <section class="xl:col-span-2 kartu p-6 flex flex-col" aria-labelledby="judulTerlaris">
+            <div class="mb-5">
+                <h3 id="judulTerlaris" class="kartu-judul">Produk Terlaris</h3>
+                <p class="text-[15px] text-brand-secondary">Volume penjualan tertinggi</p>
             </div>
 
-            <div class="pt-4 border-t border-stone-100 text-[11px] text-stone-400 flex items-center justify-between">
-                <span>Total 5 varian terfavorit</span>
-                <span class="font-semibold text-brand-red">1.240 porsi total</span>
-            </div>
+            <ol class="space-y-4 flex-1">
+                @forelse($produkTerlaris as $item)
+                    <li>
+                        <div class="flex items-baseline justify-between gap-3 mb-1.5">
+                            <span class="font-medium"><span class="text-brand-secondary mr-1.5">{{ $loop->iteration }}.</span>{{ $item['nama'] }}</span>
+                            <span class="text-[15px] text-brand-secondary whitespace-nowrap"><b class="text-brand-ink font-semibold">{{ $item['porsi'] }}</b> porsi</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-[#F0E7DD]">
+                            <div class="h-full rounded-full bg-brand-red" style="width: {{ $item['pct'] }}%"></div>
+                        </div>
+                    </li>
+                @empty
+                    <li class="kosong"><i data-lucide="trophy"></i><p class="kosong-judul">Belum ada penjualan</p></li>
+                @endforelse
+            </ol>
+
+            @if(count($produkTerlaris))
+                <div class="mt-5 pt-4 border-t border-brand-border text-[15px] text-brand-secondary flex items-center justify-between">
+                    <span>Total {{ count($produkTerlaris) }} varian terfavorit</span>
+                    <span class="font-semibold text-brand-ink">{{ number_format($totalPorsiTerlaris, 0, ',', '.') }} porsi total</span>
+                </div>
+            @endif
+        </section>
+    </div>
+
+    <!-- ==================== PERBANDINGAN PERIODE ==================== -->
+    <section class="kartu p-6 flex flex-col md:flex-row md:items-center gap-4" aria-labelledby="judulBanding">
+        <span class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 {{ $naik ? 'bg-[#E6F3EB] text-[#2E7D4F]' : 'bg-[#FCE6E3] text-[#B0261D]' }}">
+            <i data-lucide="{{ $naik ? 'trending-up' : 'trending-down' }}" class="!w-6 !h-6"></i>
+        </span>
+        <div class="flex-1">
+            <h3 id="judulBanding" class="text-[13px] uppercase tracking-wide text-brand-secondary font-semibold">Perbandingan Periode</h3>
+            <p class="text-lg mt-0.5">
+                Bulan ini <b>{{ $rp($perbandingan['bulan_ini']) }}</b> vs bulan lalu <b>{{ $rp($perbandingan['bulan_lalu']) }}</b>
+            </p>
         </div>
-
-    </div>
-
-    <!-- ==================== BAGIAN BAWAH: PERBANDINGAN PERIODE ==================== -->
-    <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5">Perbandingan Periode</h4>
-        <p class="text-sm font-bold text-stone-800">
-            Bulan ini Rp {{ number_format($perbandingan['bulan_ini'], 0, ',', '.') }} vs Bulan Lalu Rp {{ number_format($perbandingan['bulan_lalu'], 0, ',', '.') }}
-        </p>
-        <p class="text-xs font-semibold text-[#2E8B57] mt-1.5 flex items-center gap-1.5">
-            <span>&uarr;</span> {{ $perbandingan['persentase'] }} &middot; <span class="font-normal">{{ $perbandingan['keterangan'] }}</span>
-        </p>
-    </div>
+        <div class="md:text-right">
+            <p class="font-display text-3xl font-semibold {{ $naik ? 'text-[#2E7D4F]' : 'text-[#B0261D]' }}">{{ $perbandingan['persentase'] }}</p>
+            <p class="text-[15px] text-brand-secondary">{{ $perbandingan['keterangan'] }}</p>
+        </div>
+    </section>
 
 </div>
 @endsection
-

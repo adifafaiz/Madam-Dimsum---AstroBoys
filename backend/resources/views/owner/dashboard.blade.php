@@ -3,163 +3,193 @@
 @section('title', 'Dashboard Owner')
 @section('page_title', 'Dashboard')
 
+@php
+    $rp = fn ($n) => 'Rp ' . number_format($n, 0, ',', '.');
+    $adaTerlaris = $produkTerlarisNama && $produkTerlarisNama !== '-' && $produkTerlarisPorsi > 0;
+    $totalSepekan = collect($chartDays)->sum('sales');
+    $hariTertinggi = collect($chartDays)->sortByDesc('sales')->first();
+@endphp
+
+@push('styles')
+<style>
+    .ringkasan b { font-weight: 700; color: #2A211C; }
+    .ringkasan .sorot { color: #C8372D; }
+    .batang { transition: opacity .15s; }
+    .kolom-batang:hover .batang, .kolom-batang:focus-visible .batang { opacity: .82; }
+    .kolom-batang .tip { opacity: 0; transform: translate(-50%, 4px); transition: opacity .12s, transform .12s; }
+    .kolom-batang:hover .tip, .kolom-batang:focus-visible .tip { opacity: 1; transform: translate(-50%, 0); }
+</style>
+@endpush
+
 @section('content')
-<div class="space-y-6 max-w-7xl">
+<div class="space-y-6">
 
-    <!-- ==================== 4 STAT SUMMARY CARDS ==================== -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Card 1: Penjualan Hari Ini -->
-        <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-            <p class="text-xs font-semibold text-stone-500 mb-1">Penjualan Hari Ini</p>
-            <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">
-                Rp {{ number_format($penjualanHariIni, 0, ',', '.') }}
-            </h3>
-            <p class="text-[11px] font-medium text-emerald-600 mt-2 flex items-center gap-1">
-                <span>&uarr;</span> +12% dari kemarin
-            </p>
-        </div>
+    <!-- ==================== KALIMAT RINGKASAN ==================== -->
+    <section class="pb-6 border-b border-brand-border" aria-label="Ringkasan hari ini">
+        <p class="text-[15px] text-brand-secondary flex items-center gap-2">
+            <i data-lucide="calendar" class="!w-4 !h-4"></i>
+            <span id="tanggalHariIni">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</span>
+        </p>
+        <h2 class="font-display text-3xl font-semibold mt-2"><span id="sapaanOwner">Halo</span>, {{ Auth::user()->name ?? 'Owner' }}.</h2>
+        <p class="ringkasan mt-3 text-xl leading-relaxed text-brand-secondary max-w-5xl">
+            Penjualan hari ini <b class="sorot">{{ $rp($penjualanHariIni) }}</b>.
+            Bulan ini sudah <b>{{ $rp($pendapatanBulanIni) }}</b> dari <b>{{ number_format($transaksiBulanIni, 0, ',', '.') }} transaksi</b>.
+            @if($adaTerlaris)
+                <b>{{ $produkTerlarisNama }}</b> paling laku hari ini ({{ $produkTerlarisPorsi }} porsi).
+            @endif
+            @if($stokMenipisCount > 0)
+                <a href="#restock" class="underline decoration-[#EADFD3] decoration-2 underline-offset-4 hover:decoration-brand-red"><b class="sorot">{{ $stokMenipisCount }} produk</b> stoknya menipis</a> dan perlu di-restock.
+            @else
+                Semua stok produk masih aman.
+            @endif
+        </p>
+    </section>
 
-        <!-- Card 2: Pendapatan Bulan Ini -->
-        <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-            <p class="text-xs font-semibold text-stone-500 mb-1">Pendapatan Bulan Ini</p>
-            <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">
-                Rp {{ number_format($pendapatanBulanIni, 0, ',', '.') }}
-            </h3>
-            <p class="text-[11px] font-medium text-stone-500 mt-2">
-                {{ number_format($transaksiBulanIni, 0, ',', '.') }} transaksi
-            </p>
-        </div>
+    <!-- ==================== GRAFIK & RESTOCK ==================== -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        <!-- Card 3: Stok Menipis -->
-        <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-            <p class="text-xs font-semibold text-stone-500 mb-1">Stok Menipis</p>
-            <h3 class="text-2xl font-extrabold text-stone-900 tracking-tight">
-                {{ $stokMenipisCount }} produk
-            </h3>
-            <p class="text-[11px] font-semibold text-brand-red mt-2">
-                perlu di-restock
-            </p>
-        </div>
-
-        <!-- Card 4: Produk Terlaris -->
-        <div class="bg-white p-5 rounded-2xl border border-[#EADFD3] shadow-sm">
-            <p class="text-xs font-semibold text-stone-500 mb-1">Produk Terlaris</p>
-            <h3 class="text-xl font-extrabold text-stone-900 tracking-tight truncate">
-                {{ $produkTerlarisNama }}
-            </h3>
-            <p class="text-[11px] font-medium text-stone-500 mt-2">
-                {{ $produkTerlarisPorsi }} porsi terjual
-            </p>
-        </div>
-    </div>
-
-    <!-- ==================== BAGIAN TENGAH (GRAFIK & RESTOCK) ==================== -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Kiri (2 Kolom): Grafik Penjualan 7 Hari Terakhir -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-6">
-                <h4 class="text-sm font-bold text-stone-900">Penjualan 7 Hari Terakhir</h4>
-                <span class="text-xs font-medium text-stone-400">Total sepekan</span>
+        <section class="xl:col-span-2 kartu p-6" aria-labelledby="judulGrafik">
+            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-6">
+                <h3 id="judulGrafik" class="kartu-judul">Penjualan 7 Hari Terakhir</h3>
+                <p class="text-[15px] text-brand-secondary">Total sepekan <b class="text-brand-ink font-semibold">{{ $rp($totalSepekan) }}</b></p>
             </div>
 
-            <!-- Custom Bar Chart Sesuai Desain Mockup -->
-            <div class="h-48 flex items-end justify-between gap-3 sm:gap-6 pt-4 px-2 sm:px-6 border-b border-stone-100">
-                @foreach($chartDays as $day)
-                    <div class="flex-1 flex flex-col items-center h-full justify-end group relative">
-                        <!-- Tooltip on hover -->
-                        <div class="opacity-0 group-hover:opacity-100 transition absolute -top-8 px-2 py-1 bg-stone-900 text-white text-[10px] rounded shadow pointer-events-none whitespace-nowrap z-10">
-                            Rp {{ number_format($day['sales'], 0, ',', '.') }}
+            <div class="relative h-60" aria-hidden="true">
+                {{-- Garis bantu samar --}}
+                <div class="absolute inset-x-0 top-0 border-t border-dashed border-[#F0E7DD]"></div>
+                <div class="absolute inset-x-0 top-1/2 border-t border-dashed border-[#F0E7DD]"></div>
+
+                <div class="absolute inset-0 flex items-end gap-3 sm:gap-6 border-b border-brand-border">
+                    @foreach($chartDays as $day)
+                        @php $tertinggi = $hariTertinggi && $day['sales'] === $hariTertinggi['sales']; @endphp
+                        <div class="kolom-batang relative flex-1 h-full flex flex-col items-center justify-end" tabindex="0">
+                            <span class="tip pointer-events-none absolute left-1/2 z-10 -mt-1 px-2.5 py-1.5 rounded bg-brand-dark text-white text-[13px] whitespace-nowrap"
+                                  style="bottom: calc({{ $day['height'] }} + 8px)">
+                                {{ $day['day'] }} &middot; {{ $rp($day['sales']) }}
+                            </span>
+                            @if($tertinggi)
+                                <span class="text-[13px] font-semibold text-brand-ink mb-1.5 whitespace-nowrap">{{ $rp($day['sales']) }}</span>
+                            @endif
+                            <div class="batang w-full max-w-[44px] rounded-t-[4px] bg-brand-red" style="height: {{ $day['height'] }}"></div>
                         </div>
-                        <!-- Bar -->
-                        <div 
-                            style="height: {{ $day['height'] }};" 
-                            class="w-full max-w-[36px] rounded-t-md transition-all duration-300 bg-brand-red shadow-sm hover:opacity-90">
-                        </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
 
-            <!-- Label Hari di Bawah Batang -->
-            <div class="flex items-center justify-between px-2 sm:px-6 pt-3 text-xs font-medium text-stone-500">
+            <div class="flex gap-3 sm:gap-6 pt-2.5 text-[15px] text-brand-secondary" aria-hidden="true">
                 @foreach($chartDays as $day)
                     <span class="flex-1 text-center">{{ $day['day'] }}</span>
                 @endforeach
             </div>
-        </div>
 
-        <!-- Kanan (1 Kolom): Riwayat Pemesanan / Perlu Dipesan ke Pemasok -->
-        <div class="bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm flex flex-col justify-between">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-sm font-bold text-stone-900">Riwayat Pemesanan</h4>
-                    <span class="text-[11px] font-semibold text-brand-red bg-red-50 px-2 py-0.5 rounded-full">Perlu Dipesan</span>
-                </div>
+            {{-- Versi tabel untuk pembaca layar --}}
+            <table class="sr-only">
+                <caption>Penjualan 7 hari terakhir</caption>
+                <thead><tr><th>Hari</th><th>Penjualan</th></tr></thead>
+                <tbody>
+                    @foreach($chartDays as $day)
+                        <tr><td>{{ $day['day'] }}</td><td>{{ $rp($day['sales']) }}</td></tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </section>
 
-                <!-- Daftar Produk yang Perlu Dipesan -->
-                <div class="space-y-3.5 divide-y divide-stone-100">
-                    @forelse($produkRestockList as $item)
-                        <div class="pt-3 first:pt-0 flex items-center justify-between text-xs">
-                            <span class="font-semibold text-stone-800">{{ $item->nama }}</span>
-                            <span class="text-brand-red font-medium">
-                                sisa {{ $item->stok }} &middot; <b class="font-bold">pesan {{ 2 * $item->stok_minimum }}</b>
-                            </span>
-                        </div>
-                    @empty
-                        <div class="py-6 text-center text-xs text-stone-400">
-                            Semua stok produk saat ini dalam batas aman.
-                        </div>
-                    @endforelse
-                </div>
+        <section id="restock" class="kartu flex flex-col scroll-mt-24" aria-labelledby="judulRestock">
+            <div class="px-6 pt-6 pb-4 flex items-center justify-between gap-3">
+                <h3 id="judulRestock" class="kartu-judul">Riwayat Pemesanan</h3>
+                @if($produkRestockList->count())
+                    <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#FCE6E3] text-[#B0261D] text-[13px] font-semibold">
+                        <i data-lucide="triangle-alert" class="!w-3.5 !h-3.5"></i> Perlu Dipesan
+                    </span>
+                @endif
             </div>
 
-            <!-- Tombol Buka Daftar Pemasok -->
-            <div class="pt-6">
-                <a href="{{ route('owner.produk') }}" 
-                    class="block w-full text-center py-2.5 px-4 rounded-xl border border-[#EADFD3] text-xs font-semibold text-stone-700 hover:bg-stone-50 hover:border-stone-400 transition shadow-sm">
-                    Buka Daftar Pemasok
+            <div class="flex-1 px-6">
+                @forelse($produkRestockList as $item)
+                    <div class="py-3 border-t border-brand-border flex items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold truncate">{{ $item->nama }}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                @include('partials.bar-stok', ['produk' => $item])
+                                <span class="text-[13px] text-brand-secondary">sisa {{ $item->stok }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-[13px] text-brand-secondary">pesan</p>
+                            <p class="text-lg font-bold text-brand-red leading-none">{{ 2 * $item->stok_minimum }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="kosong border-t border-brand-border">
+                        <i data-lucide="circle-check"></i>
+                        <p class="kosong-judul">Stok aman semua</p>
+                        <p class="kosong-sub">Tidak ada produk di bawah batas minimum saat ini.</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="p-6 pt-4">
+                <a href="{{ route('owner.produk') }}" class="btn btn-secondary w-full">
+                    <i data-lucide="truck" class="!w-4 !h-4"></i> Buka Daftar Pemasok
                 </a>
             </div>
-        </div>
+        </section>
     </div>
 
-    <!-- ==================== BAGIAN BAWAH: TRANSAKSI TERBARU ==================== -->
-    <div class="bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-[#EADFD3] flex items-center justify-between">
-            <h4 class="text-sm font-bold text-stone-900">Transaksi Terbaru</h4>
-            <span class="text-xs text-stone-400">Pembaruan otomatis dari kasir</span>
+    <!-- ==================== TRANSAKSI TERBARU ==================== -->
+    <section class="kartu overflow-hidden" aria-labelledby="judulTerbaru">
+        <div class="px-6 py-5 flex flex-wrap items-center justify-between gap-2 border-b border-brand-border">
+            <h3 id="judulTerbaru" class="kartu-judul">Transaksi Terbaru</h3>
+            <a href="{{ route('owner.riwayat-transaksi') }}" class="text-[15px] font-medium text-brand-red hover:underline underline-offset-4 inline-flex items-center gap-1">
+                Lihat semua <i data-lucide="arrow-right" class="!w-4 !h-4"></i>
+            </a>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+            <table class="tabel">
+                <thead>
                     <tr>
-                        <th class="py-3 px-6">No. Transaksi</th>
-                        <th class="py-3 px-6">Waktu</th>
-                        <th class="py-3 px-6">Kasir</th>
-                        <th class="py-3 px-6 text-right">Total</th>
+                        <th>No. Transaksi</th>
+                        <th>Waktu</th>
+                        <th>Kasir</th>
+                        <th class="text-right">Total</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                <tbody>
                     @forelse($transaksiTerbaru as $trx)
-                        <tr class="hover:bg-stone-50/60 transition">
-                            <td class="py-3.5 px-6 font-bold text-stone-900">{{ $trx->kode }}</td>
-                            <td class="py-3.5 px-6 text-stone-500">{{ \Carbon\Carbon::parse($trx->waktu)->format('H:i') }}</td>
-                            <td class="py-3.5 px-6">{{ $trx->user->name ?? 'Kasir' }}</td>
-                            <td class="py-3.5 px-6 text-right font-bold text-stone-900">
-                                Rp {{ number_format($trx->total, 0, ',', '.') }}
-                            </td>
+                        <tr>
+                            <td class="font-semibold">{{ $trx->kode }}</td>
+                            <td class="text-brand-secondary">{{ \Carbon\Carbon::parse($trx->waktu)->format('H:i') }}</td>
+                            <td>{{ $trx->user->name ?? 'Kasir' }}</td>
+                            <td class="text-right font-semibold">{{ $rp($trx->total) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="py-6 text-center text-stone-400">Belum ada transaksi terbaru hari ini.</td>
+                            <td colspan="4">
+                                <div class="kosong">
+                                    <i data-lucide="receipt-text"></i>
+                                    <p class="kosong-judul">Belum ada transaksi hari ini</p>
+                                    <p class="kosong-sub">Transaksi dari kasir akan muncul di sini.</p>
+                                </div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
 </div>
 @endsection
 
+@push('scripts')
+<script>
+    (function () {
+        const h = new Date().getHours();
+        const waktu = h < 11 ? 'pagi' : h < 15 ? 'siang' : h < 18 ? 'sore' : 'malam';
+        document.getElementById('sapaanOwner').textContent = 'Selamat ' + waktu;
+        document.getElementById('tanggalHariIni').textContent =
+            new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    })();
+</script>
+@endpush

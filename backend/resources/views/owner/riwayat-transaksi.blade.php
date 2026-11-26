@@ -3,212 +3,177 @@
 @section('title', 'Riwayat Transaksi - Owner')
 @section('page_title', 'Riwayat Transaksi')
 
+@php
+    $rp = fn ($n) => 'Rp ' . number_format($n, 0, ',', '.');
+    $labelStatus = [
+        'baru'     => ['Baru', 'bg-[#FCE6E3] text-[#B0261D]'],
+        'diproses' => ['Diproses', 'bg-[#FBEBDC] text-[#A8571A]'],
+        'siap'     => ['Siap diambil', 'bg-[#E6F3EB] text-[#2E7D4F]'],
+        'selesai'  => ['Selesai', 'bg-[#F3ECE4] text-brand-ink'],
+        'batal'    => ['Dibatalkan', 'bg-[#2A211C] text-white'],
+    ];
+@endphp
+
 @section('content')
-<div class="max-w-7xl">
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-6 items-start">
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-        <!-- ==================== KOLOM KIRI: DAFTAR TRANSAKSI (8 Kolom) ==================== -->
-        <div class="lg:col-span-8 bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
-            <!-- Filter & Search Bar -->
-            <div class="p-5 border-b border-[#EADFD3] flex flex-wrap items-center justify-between gap-3 bg-white">
-                <form action="{{ route('owner.riwayat-transaksi') }}" method="GET" class="flex flex-wrap items-center gap-3 w-full">
-                    <!-- Filter Tanggal -->
-                    <div class="relative">
-                        <input 
-                            type="date" 
-                            name="tanggal" 
-                            value="{{ request('tanggal') }}" 
-                            onchange="this.form.submit()"
-                            class="px-3 py-2 bg-white border border-[#EADFD3] rounded-lg text-xs font-semibold text-stone-800 focus:outline-none focus:ring-1 focus:ring-brand-red cursor-pointer shadow-sm"
-                        >
-                    </div>
-
-                    <!-- Search No. Transaksi / Produk -->
-                    <div class="relative flex-1 min-w-[200px]">
-                        <input 
-                            type="text" 
-                            name="search" 
-                            value="{{ request('search') }}"
-                            placeholder="Cari No. transaksi / produk..." 
-                            class="w-full pl-9 pr-4 py-2 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red shadow-sm"
-                        >
-                        <svg class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-
-                    @if(request('tanggal') || request('search'))
-                        <a href="{{ route('owner.riwayat-transaksi') }}" class="text-xs font-semibold text-brand-red hover:underline py-2">
-                            Reset
-                        </a>
-                    @endif
-                </form>
+    <!-- ==================== DAFTAR TRANSAKSI ==================== -->
+    <section class="min-w-0 space-y-4" aria-label="Daftar transaksi">
+        <form action="{{ route('owner.riwayat-transaksi') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
+            <div class="field-ikon sm:w-56 shrink-0">
+                <i data-lucide="calendar"></i>
+                <input type="date" name="tanggal" value="{{ request('tanggal') }}" onchange="this.form.submit()" class="field" aria-label="Tanggal">
             </div>
+            <div class="field-ikon flex-1">
+                <i data-lucide="search"></i>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari no. transaksi / produk…" class="field">
+            </div>
+            <button type="submit" class="btn btn-dark btn-lg"><i data-lucide="search" class="!w-4 !h-4"></i> Cari</button>
+            @if(request('tanggal') || request('search'))
+                <a href="{{ route('owner.riwayat-transaksi') }}" class="btn btn-ghost btn-lg text-brand-red"><i data-lucide="x" class="!w-4 !h-4"></i> Reset</a>
+            @endif
+        </form>
 
-            <!-- Tabel Transaksi -->
+        <div class="kartu overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+                <table class="tabel">
+                    <thead>
                         <tr>
-                            <th class="py-3.5 px-6">No. Transaksi</th>
-                            <th class="py-3.5 px-6">Waktu</th>
-                            <th class="py-3.5 px-6">Kasir</th>
-                            <th class="py-3.5 px-6 text-right">Total</th>
+                            <th>No. Transaksi</th>
+                            <th>Waktu</th>
+                            <th>Kasir</th>
+                            <th class="text-right">Total</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                    <tbody>
                         @forelse($orders as $o)
                             @php
                                 $isSelected = ($selectedOrder && $selectedOrder->id === $o->id);
+                                $urlDetail = route('owner.riwayat-transaksi', ['selected' => $o->kode, 'tanggal' => request('tanggal'), 'search' => request('search')]);
                             @endphp
-                            <tr 
-                                onclick="window.location.href='{{ route('owner.riwayat-transaksi', ['selected' => $o->kode, 'tanggal' => request('tanggal'), 'search' => request('search')]) }}'"
-                                class="cursor-pointer transition {{ $isSelected ? 'bg-red-50/70 border-l-4 border-l-brand-red' : 'hover:bg-stone-50/70' }}"
+                            <tr
+                                onclick="window.location.href='{{ $urlDetail }}'"
+                                onkeydown="if (event.key === 'Enter') window.location.href='{{ $urlDetail }}'"
+                                tabindex="0"
+                                @if($isSelected) aria-current="true" @endif
+                                class="cursor-pointer focus:outline-none focus-visible:bg-brand-lightBg {{ $isSelected ? '!bg-[#FCF1EF] shadow-[inset_4px_0_0_#C8372D]' : '' }} {{ $o->status === 'batal' ? 'text-brand-secondary' : '' }}"
                             >
-                                <td class="py-4 px-6 font-bold {{ $isSelected ? 'text-brand-red' : 'text-stone-900' }}">
-                                    {{ $o->kode }}
+                                <td class="font-semibold whitespace-nowrap {{ $isSelected ? 'text-brand-red' : '' }}">
+                                    <span class="{{ $o->status === 'batal' ? 'line-through decoration-1' : '' }}">{{ $o->kode }}</span>
                                     @if($o->status === 'batal')
-                                        <span class="ml-1 text-[10px] text-red-600 bg-red-100 px-1.5 py-0.5 rounded">Batal</span>
+                                        <span class="ml-1.5 inline-flex items-center h-6 px-2 rounded-full text-[13px] font-semibold bg-[#2A211C] text-white no-underline">Batal</span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 text-stone-500 whitespace-nowrap">
-                                    {{ $o->waktu ? $o->waktu->format('d M H:i') : '-' }}
-                                </td>
-                                <td class="py-4 px-6">{{ $o->user->name ?? 'Kasir' }}</td>
-                                <td class="py-4 px-6 text-right font-bold text-stone-900">
-                                    Rp {{ number_format($o->total, 0, ',', '.') }}
-                                </td>
+                                <td class="text-brand-secondary whitespace-nowrap">{{ $o->waktu ? $o->waktu->format('d M H:i') : '-' }}</td>
+                                <td>{{ $o->user->name ?? 'Kasir' }}</td>
+                                <td class="text-right font-semibold whitespace-nowrap">{{ $rp($o->total) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-stone-400">Tidak ada transaksi ditemukan.</td>
+                                <td colspan="4">
+                                    <div class="kosong">
+                                        <i data-lucide="receipt-text"></i>
+                                        @if(request('tanggal') || request('search'))
+                                            <p class="kosong-judul">Tidak ada transaksi yang cocok</p>
+                                            <p class="kosong-sub">Coba tanggal atau kata kunci lain.</p>
+                                        @else
+                                            <p class="kosong-judul">Belum ada transaksi</p>
+                                            <p class="kosong-sub">Transaksi dari kasir akan tercatat di sini.</p>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+    </section>
 
-        <!-- ==================== KOLOM KANAN: PANEL DETAIL TRANSAKSI (4 Kolom - FR-28) ==================== -->
-        <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm flex flex-col justify-between">
-            @if($selectedOrder)
-                <div>
-                    <!-- Header Detail -->
-                    <div class="pb-3 border-b border-stone-100 mb-4">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-sm font-bold text-stone-900">Detail {{ $selectedOrder->kode }}</h4>
-                            @if($selectedOrder->status === 'batal')
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-brand-red uppercase">Dibatalkan</span>
-                            @else
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">Selesai</span>
-                            @endif
-                        </div>
-                        <p class="text-[11px] text-stone-400 mt-1">
-                            {{ $selectedOrder->waktu ? $selectedOrder->waktu->format('d M Y, H:i') : '-' }} &middot; Kasir: <b class="text-stone-700">{{ $selectedOrder->user->name ?? 'Kasir' }}</b>
-                        </p>
+    <!-- ==================== DETAIL TRANSAKSI ==================== -->
+    <aside class="xl:sticky xl:top-[96px]" aria-label="Detail transaksi">
+        @if($selectedOrder)
+            @php [$teksStatus, $gayaStatus] = $labelStatus[$selectedOrder->status] ?? [ucfirst($selectedOrder->status), 'bg-[#F3ECE4] text-brand-ink']; @endphp
+            <div class="struk">
+                <div class="px-6 pt-6 pb-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-[13px] uppercase tracking-wide text-brand-secondary">Detail transaksi</p>
+                        <span class="inline-flex items-center h-7 px-2.5 rounded-full text-[13px] font-semibold {{ $gayaStatus }}">{{ $teksStatus }}</span>
                     </div>
+                    <h2 class="font-display text-2xl font-semibold mt-1">{{ $selectedOrder->kode }}</h2>
+                    <p class="text-[15px] text-brand-secondary mt-0.5">
+                        {{ $selectedOrder->waktu ? $selectedOrder->waktu->format('d M Y, H:i') : '-' }} &middot; Kasir <b class="text-brand-ink font-medium">{{ $selectedOrder->user->name ?? 'Kasir' }}</b>
+                    </p>
+                </div>
 
-                    <!-- Breakdown Items Sesuai Mockup Frame 7 -->
-                    <div class="space-y-3.5 text-xs mb-6 divide-y divide-stone-100">
-                        @foreach($selectedOrder->items as $item)
-                            <div class="pt-2.5 first:pt-0 flex items-center justify-between">
-                                <span class="text-stone-700 font-medium">
-                                    {{ $item->product->nama ?? 'Dimsum' }} <span class="text-stone-400 font-normal">x{{ $item->qty }}</span>
-                                </span>
-                                <span class="font-semibold text-stone-900">
-                                    {{ number_format($item->subtotal, 0, ',', '.') }}
-                                </span>
-                            </div>
-                        @endforeach
+                <ul class="px-6 py-4 border-t-2 border-dashed border-brand-border space-y-3">
+                    @foreach($selectedOrder->items as $item)
+                        <li class="flex items-baseline gap-3">
+                            <span class="w-9 font-bold">{{ $item->qty }}&times;</span>
+                            <span class="flex-1 min-w-0">{{ $item->product->nama ?? 'Dimsum' }}</span>
+                            <span class="font-semibold">{{ $rp($item->subtotal) }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+
+                <div class="sobek px-6 pt-5 pb-6 space-y-2">
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-lg font-semibold">Total</span>
+                        <span class="font-display text-3xl font-semibold {{ $selectedOrder->status === 'batal' ? 'text-brand-secondary line-through decoration-2' : 'text-brand-red' }}">{{ $rp($selectedOrder->total) }}</span>
                     </div>
-
-                    <!-- Ringkasan Pembayaran Sesuai Mockup Frame 7 -->
-                    <div class="pt-4 border-t border-[#EADFD3] space-y-2 text-xs">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-stone-800">Total</span>
-                            <span class="text-lg font-extrabold text-brand-red">
-                                Rp {{ number_format($selectedOrder->total, 0, ',', '.') }}
-                            </span>
-                        </div>
-                        <div class="flex items-center justify-between text-stone-500 pt-1">
-                            <span>Dibayar</span>
-                            <span class="font-medium text-stone-800">
-                                Rp {{ number_format($selectedOrder->dibayar, 0, ',', '.') }}
-                            </span>
-                        </div>
-                        <div class="flex items-center justify-between text-stone-500">
-                            <span>Kembalian</span>
-                            <span class="font-medium text-stone-800">
-                                Rp {{ number_format($selectedOrder->kembalian, 0, ',', '.') }}
-                            </span>
-                        </div>
+                    <div class="flex justify-between text-[15px] text-brand-secondary">
+                        <span>Dibayar</span><span class="text-brand-ink">{{ $rp($selectedOrder->dibayar) }}</span>
+                    </div>
+                    <div class="flex justify-between text-[15px] text-brand-secondary">
+                        <span>Kembalian</span><span class="text-brand-ink">{{ $rp($selectedOrder->kembalian) }}</span>
                     </div>
 
                     @if($selectedOrder->status === 'batal')
-                        <div class="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-brand-red text-xs">
-                            <p class="font-bold">Alasan Batal:</p>
-                            <p class="text-stone-700 mt-0.5">{{ $selectedOrder->alasan_batal }}</p>
+                        <div class="mt-3 px-4 py-3 rounded bg-brand-lightBg border border-brand-border">
+                            <p class="text-[13px] font-semibold text-brand-secondary uppercase tracking-wide">Alasan batal</p>
+                            <p class="mt-0.5">{{ $selectedOrder->alasan_batal }}</p>
                         </div>
+                    @else
+                        <button type="button" onclick="openModalBatalTransaksi('{{ $selectedOrder->id }}', '{{ $selectedOrder->kode }}')" class="btn btn-danger btn-lg w-full !mt-4">
+                            <i data-lucide="ban" class="!w-4 !h-4"></i> Batalkan Transaksi
+                        </button>
                     @endif
                 </div>
-
-                <!-- Tombol Batalkan Transaksi (BR-06) -->
-                @if($selectedOrder->status !== 'batal')
-                    <div class="pt-6 border-t border-stone-100 mt-6">
-                        <button 
-                            type="button" 
-                            onclick="openModalBatalTransaksi('{{ $selectedOrder->id }}', '{{ $selectedOrder->kode }}')" 
-                            class="w-full py-2.5 px-4 rounded-xl border border-red-200 text-brand-red hover:bg-red-50 text-xs font-semibold shadow-sm transition flex items-center justify-center gap-1.5"
-                        >
-                            <span>Batalkan Transaksi (BR-06)</span>
-                        </button>
-                    </div>
-                @endif
-            @else
-                <div class="py-12 text-center text-xs text-stone-400">
-                    Pilih salah satu transaksi untuk melihat rincian nota.
-                </div>
-            @endif
-        </div>
-
-    </div>
+            </div>
+        @else
+            <div class="kosong min-h-[320px] rounded border-2 border-dashed border-brand-border">
+                <i data-lucide="mouse-pointer-click"></i>
+                <p class="kosong-judul">Pilih satu transaksi</p>
+                <p class="kosong-sub">Rincian item, uang dibayar, kembalian, dan opsi pembatalan akan tampil di sini.</p>
+            </div>
+        @endif
+    </aside>
 
 </div>
 
-<!-- Modal Batalkan Transaksi (BR-06) -->
-<div id="modalBatal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-[#EADFD3] shadow-2xl relative">
-        <div class="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
-            <h3 class="text-base font-bold text-stone-900">Batalkan Transaksi</h3>
-            <button type="button" onclick="closeModalBatal()" class="text-stone-400 hover:text-stone-700 p-1">✕</button>
+<!-- ==================== MODAL BATALKAN TRANSAKSI ==================== -->
+<div id="modalBatal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="judulBatal">
+    <div class="modal-panel max-w-md">
+        <div class="modal-kepala">
+            <h3 id="judulBatal" class="kartu-judul">Batalkan Transaksi</h3>
+            <button type="button" onclick="closeModalBatal()" class="btn btn-ghost btn-sm" aria-label="Tutup"><i data-lucide="x"></i></button>
         </div>
 
-        <form id="formBatal" method="POST" class="space-y-4">
+        <form id="formBatal" method="POST">
             @csrf
-            <p class="text-xs text-stone-600">
-                Membatalkan nota <b id="batalKodeText" class="text-stone-900"></b> akan otomatis mengembalikan stok seluruh produk terkait ke status sebelum transaksi (BR-06).
-            </p>
-
-            <div>
-                <label for="alasan_batal" class="block text-xs font-semibold text-stone-600 mb-1.5">Alasan Pembatalan (Wajib)</label>
-                <textarea 
-                    name="alasan_batal" 
-                    id="alasan_batal" 
-                    rows="2" 
-                    required 
-                    placeholder="misal: Salah input pesanan / pelanggan membatalkan pembelian"
-                    class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red"
-                ></textarea>
+            <div class="modal-isi space-y-4">
+                <div class="flex items-start gap-3 px-4 py-3 rounded bg-[#FBEBDC] text-[#8F4A14]">
+                    <i data-lucide="undo-2" class="mt-0.5"></i>
+                    <p>Membatalkan nota <b id="batalKodeText"></b> akan mengembalikan stok semua produk di dalamnya.</p>
+                </div>
+                <div>
+                    <label for="alasan_batal" class="label">Alasan pembatalan <span class="text-brand-red">*</span></label>
+                    <textarea name="alasan_batal" id="alasan_batal" rows="3" required placeholder="misal: Salah input pesanan / pelanggan membatalkan pembelian" class="field"></textarea>
+                </div>
             </div>
-
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-100">
-                <button type="button" onclick="closeModalBatal()" class="px-4 py-2.5 rounded-lg border border-[#EADFD3] text-xs font-semibold text-stone-600 hover:bg-stone-50">
-                    Batal
-                </button>
-                <button type="submit" class="px-5 py-2.5 rounded-lg bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm">
-                    Konfirmasi Pembatalan
-                </button>
+            <div class="modal-kaki">
+                <button type="button" onclick="closeModalBatal()" class="btn btn-secondary">Kembali</button>
+                <button type="submit" class="btn btn-primary" data-loading-text="Membatalkan…"><i data-lucide="ban" class="!w-4 !h-4"></i> Konfirmasi Pembatalan</button>
             </div>
         </form>
     </div>
@@ -220,11 +185,13 @@
         document.getElementById('batalKodeText').textContent = kode;
         document.getElementById('formBatal').action = `/owner/transaksi/${orderId}/batal`;
         document.getElementById('modalBatal').classList.remove('hidden');
+        document.getElementById('alasan_batal').focus();
     }
     function closeModalBatal() {
         document.getElementById('modalBatal').classList.add('hidden');
     }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalBatal(); });
+    document.getElementById('modalBatal').addEventListener('click', e => { if (e.target.id === 'modalBatal') closeModalBatal(); });
 </script>
 @endpush
 @endsection
-

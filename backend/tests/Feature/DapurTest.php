@@ -121,7 +121,7 @@ class DapurTest extends TestCase
         $response->assertSee('Antrian Pesanan');
         $response->assertSee('TRX-0065');
         $response->assertSee('Siomay Ayam');
-        $response->assertSee('Mulai Proses');
+        $response->assertSee('Mulai masak');
     }
 
     /**

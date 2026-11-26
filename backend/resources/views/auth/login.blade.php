@@ -4,349 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - Madam Dimsum</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            red: '#C8372D',
-                            redHover: '#B22F26',
-                            dark: '#2A211C',
-                            darkCard: '#362B25',
-                            lightBg: '#FBF7F2',
-                            border: '#EADFD3',
-                            secondary: '#8A7B70',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    @include('partials.head')
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        .role-card {
+            display: flex; flex-direction: column; align-items: flex-start; gap: .5rem;
+            min-height: 128px; padding: 1rem .875rem; text-align: left;
+            background: #fff; border: 2px solid #EADFD3; border-radius: 6px;
+            color: #2A211C; transition: border-color .15s, background-color .15s;
         }
+        .role-card:hover { border-color: #D9C8B8; }
+        .role-card:focus-visible { outline: 3px solid rgba(200,55,45,.25); outline-offset: 2px; }
+        .role-card .role-icon { color: #8A7B70; }
+        .role-card[aria-checked="true"] { border-color: #C8372D; background: #FCF1EF; }
+        .role-card[aria-checked="true"] .role-icon { color: #C8372D; }
+        .field {
+            width: 100%; height: 48px; background: #fff; border: 1px solid #EADFD3; border-radius: 6px;
+            font-size: 16px; color: #2A211C; transition: border-color .15s, box-shadow .15s;
+        }
+        .field::placeholder { color: #B9ABA0; }
+        .field:focus { outline: none; border-color: #C8372D; box-shadow: 0 0 0 3px rgba(200,55,45,.15); }
     </style>
 </head>
-<body class="bg-brand-lightBg text-stone-800 antialiased min-h-screen">
+<body class="bg-brand-lightBg antialiased min-h-screen relative overflow-x-hidden">
 
-    <div class="min-h-screen flex flex-col lg:flex-row">
-        <!-- ==================== SISI KIRI (DARK BRANDING) ==================== -->
-        <div class="lg:w-1/2 bg-brand-dark text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden">
-            <!-- Decorative Subtle Accent Glow -->
-            <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-red/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            <!-- Header / Logo -->
-            <div class="flex items-center gap-3.5 z-10">
-                <img src="{{ asset('images/logo-madam-dimsum.jpg') }}" alt="Madam Dimsum" class="w-11 h-11 rounded-xl shadow-lg shadow-brand-red/20 object-cover">
-                <span class="text-xl font-bold tracking-tight text-white">Madam Dimsum</span>
-            </div>
-
-            <!-- Konten Utama Branding -->
-            <div class="my-16 lg:my-0 z-10 max-w-lg">
-                <!-- Logo Besar Madam Dimsum -->
-                <div class="flex justify-center mb-8">
-                    <img src="{{ asset('images/logo-madam-dimsum.jpg') }}" alt="Logo Madam Dimsum" class="w-48 h-48 object-contain rounded-2xl">
-                </div>
-                <h1 class="text-3xl sm:text-4xl lg:text-[42px] font-bold text-white tracking-tight leading-tight">
-                    Produksi tertata, stok terjaga
-                </h1>
-                <p class="text-stone-400 text-base sm:text-lg mt-3 mb-10">
-                    Sistem pencatatan stok & penjualan
-                </p>
-
-                <!-- Fitur Dinamis Berdasarkan Peran -->
-                <div id="featureList" class="space-y-4">
-                    <!-- Item 1 -->
-                    <div class="flex items-center gap-4">
-                        <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-stone-300 shrink-0">
-                            <svg class="w-5 h-5 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <span id="feat1" class="text-stone-300 font-medium text-sm sm:text-base">Lihat antrian pesanan masuk</span>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="flex items-center gap-4">
-                        <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-stone-300 shrink-0">
-                            <svg class="w-5 h-5 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <span id="feat2" class="text-stone-300 font-medium text-sm sm:text-base">Catat produksi & penggunaan bahan</span>
-                    </div>
-
-                    <!-- Item 3 -->
-                    <div class="flex items-center gap-4">
-                        <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-stone-300 shrink-0">
-                            <svg class="w-5 h-5 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <span id="feat3" class="text-stone-300 font-medium text-sm sm:text-base">Lihat produk yang perlu diproduksi</span>
-                    </div>
-                </div>
-
-                <!-- Info Demo Akun Cepat -->
-                <div class="mt-10 p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-stone-400">
-                    <p class="font-semibold text-stone-300 mb-1.5 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-brand-red" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                        </svg>
-                        Akun Uji Coba (Demo):
-                    </p>
-                    <div class="flex flex-wrap gap-2 mt-2">
-                        <button type="button" onclick="quickFill('dapur', 'agus', 'password123')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white transition">
-                            Dapur: <b>agus</b>
-                        </button>
-                        <button type="button" onclick="quickFill('kasir', 'kasir', 'password123')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white transition">
-                            Kasir: <b>kasir</b>
-                        </button>
-                        <button type="button" onclick="quickFill('owner', 'owner', 'password123')" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white transition">
-                            Owner: <b>owner</b>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer Kiri -->
-            <div class="text-stone-500 text-xs sm:text-sm pt-6 z-10">
-                &copy; 2026 Madam Dimsum &middot; Tim Astroboys
-            </div>
-        </div>
-
-        <!-- ==================== SISI KANAN (FORM LOGIN) ==================== -->
-        <div class="lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-brand-lightBg">
-            <div class="w-full max-w-[440px]">
-
-                <!-- Judul Form -->
-                <div class="mb-8">
-                    <h2 class="text-3xl font-extrabold text-stone-900 tracking-tight">Masuk</h2>
-                    <p class="text-stone-500 text-sm mt-1.5">Pilih peran, lalu masukkan akun Anda</p>
-                </div>
-
-                <!-- Notifikasi Flash Message -->
-                @if(session('success'))
-                    <div class="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
-                        <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>{{ session('success') }}</span>
-                    </div>
-                @endif
-
-                @if($errors->any())
-                    <div class="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-brand-red text-sm">
-                        <ul class="list-disc list-inside space-y-1">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <form action="{{ route('login.post') }}" method="POST" id="loginForm" class="space-y-5">
-                    @csrf
-
-                    <!-- Pilihan Peran (Owner, Kasir, Dapur) -->
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-600 mb-2">
-                            Peran
-                        </label>
-                        <input type="hidden" name="role" id="roleInput" value="{{ old('role', 'dapur') }}">
-
-                        <div class="grid grid-cols-3 gap-3">
-                            <!-- Owner -->
-                            <button type="button" id="role-owner" onclick="selectRole('owner')"
-                                class="role-btn py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border bg-white border-stone-200 text-stone-700 hover:border-stone-300">
-                                Owner
-                            </button>
-
-                            <!-- Kasir -->
-                            <button type="button" id="role-kasir" onclick="selectRole('kasir')"
-                                class="role-btn py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border bg-white border-stone-200 text-stone-700 hover:border-stone-300">
-                                Kasir
-                            </button>
-
-                            <!-- Dapur (Default selected sesuai gambar) -->
-                            <button type="button" id="role-dapur" onclick="selectRole('dapur')"
-                                class="role-btn py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border bg-brand-red border-brand-red text-white shadow-sm">
-                                Dapur
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Input Username -->
-                    <div>
-                        <label for="username" class="block text-xs font-semibold text-stone-600 mb-2">
-                            Username
-                        </label>
-                        <input 
-                            type="text" 
-                            name="username" 
-                            id="username" 
-                            value="{{ old('username', 'agus') }}"
-                            placeholder="agus" 
-                            required
-                            autocomplete="username"
-                            class="w-full px-4 py-3 bg-white border border-stone-200 rounded-lg text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition-all"
-                        >
-                    </div>
-
-                    <!-- Input Password -->
-                    <div>
-                        <label for="password" class="block text-xs font-semibold text-stone-600 mb-2">
-                            Password
-                        </label>
-                        <div class="relative">
-                            <input 
-                                type="password" 
-                                name="password" 
-                                id="password" 
-                                value="{{ old('password', 'password123') }}"
-                                placeholder="••••••••" 
-                                required
-                                autocomplete="current-password"
-                                class="w-full pl-4 pr-11 py-3 bg-white border border-stone-200 rounded-lg text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition-all"
-                            >
-                            <!-- Tombol Toggle Show/Hide Password -->
-                            <button 
-                                type="button" 
-                                onclick="togglePasswordVisibility()" 
-                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-800 focus:outline-none p-1"
-                                title="Lihat/Sembunyikan Password"
-                            >
-                                <!-- Eye Icon -->
-                                <svg id="eyeIconOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                <!-- Eye Closed Icon -->
-                                <svg id="eyeIconClosed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Row Ingat Saya & Lupa Password -->
-                    <div class="flex items-center justify-between text-sm pt-1">
-                        <label class="flex items-center gap-2 cursor-pointer select-none text-stone-700">
-                            <input 
-                                type="checkbox" 
-                                name="remember" 
-                                id="remember"
-                                class="w-4 h-4 rounded border-stone-300 text-brand-red focus:ring-brand-red accent-brand-red"
-                            >
-                            <span class="text-xs sm:text-sm font-medium">Ingat saya</span>
-                        </label>
-                        <a href="javascript:void(0)" onclick="alert('Silakan hubungi Owner untuk mereset kata sandi Anda.')" class="text-brand-red hover:underline text-xs sm:text-sm font-medium">
-                            Lupa password?
-                        </a>
-                    </div>
-
-                    <!-- Tombol Submit Masuk -->
-                    <div class="pt-2">
-                        <button 
-                            type="submit" 
-                            id="submitBtn" 
-                            class="w-full py-3.5 px-4 bg-brand-red hover:bg-brand-redHover text-white font-semibold rounded-lg shadow-sm hover:shadow transition-all duration-200 text-sm sm:text-base flex items-center justify-center gap-2"
-                        >
-                            <span id="submitBtnText">Masuk sebagai Dapur</span>
-                        </button>
-                    </div>
-
-                    <!-- Bantuan Akun -->
-                    <div class="text-center pt-3">
-                        <p class="text-stone-500 text-xs sm:text-sm">
-                            Belum punya akun? <span class="text-stone-700 font-medium">Hubungi Owner.</span>
-                        </p>
-                    </div>
-                </form>
-
-            </div>
-        </div>
+    {{-- Motif tutup kukusan di dua sudut berlawanan --}}
+    <div class="pointer-events-none fixed -top-[180px] -left-[180px] w-[420px] h-[420px] sm:-top-[220px] sm:-left-[220px] sm:w-[600px] sm:h-[600px]">
+        @include('partials.kukusan-motif', ['id' => 'kukusan-a', 'class' => 'w-full h-full'])
+    </div>
+    <div class="pointer-events-none fixed -bottom-[200px] -right-[200px] w-[460px] h-[460px] sm:-bottom-[260px] sm:-right-[260px] sm:w-[680px] sm:h-[680px]">
+        @include('partials.kukusan-motif', ['id' => 'kukusan-b', 'class' => 'w-full h-full rotate-12'])
     </div>
 
-    <!-- Script Interaktif Frontend -->
+    <main class="relative min-h-screen flex items-center justify-center px-5 py-12">
+        <div class="w-full max-w-[460px]">
+
+            <header class="text-center mb-8">
+                @include('partials.logo', ['class' => 'w-24 h-24 mx-auto p-1 border border-brand-border'])
+                <p id="sapaan" class="mt-5 text-base font-medium text-brand-red">Selamat datang</p>
+                <h1 class="font-display text-3xl font-semibold text-brand-ink mt-1">Masuk ke Madam Dimsum</h1>
+                <p class="text-brand-secondary mt-1.5">Produksi tertata, stok terjaga.</p>
+            </header>
+
+            @if(session('success'))
+                <div class="mb-5 px-4 py-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 flex items-start gap-2.5">
+                    <i data-lucide="circle-check" class="mt-0.5 text-emerald-600"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-5 px-4 py-3 rounded border border-[#EFC5C0] bg-[#FCF1EF] text-brand-red flex items-start gap-2.5" role="alert">
+                    <i data-lucide="circle-alert" class="mt-0.5"></i>
+                    <div class="space-y-0.5">
+                        @foreach($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <form action="{{ route('login.post') }}" method="POST" id="loginForm" class="space-y-5">
+                @csrf
+
+                {{-- Peran --}}
+                <fieldset>
+                    <legend class="text-[15px] font-medium text-brand-ink mb-2">Masuk sebagai</legend>
+                    <input type="hidden" name="role" id="roleInput" value="{{ old('role', 'dapur') }}">
+
+                    <div class="grid grid-cols-3 gap-2.5" role="radiogroup" aria-label="Peran">
+                        <button type="button" id="role-owner" onclick="selectRole('owner')" role="radio" class="role-card">
+                            <i data-lucide="store" class="role-icon !w-7 !h-7"></i>
+                            <span class="font-display text-lg font-semibold leading-none mt-1">Owner</span>
+                            <span class="text-[13px] leading-snug text-brand-secondary">Lihat semua laporan</span>
+                        </button>
+                        <button type="button" id="role-kasir" onclick="selectRole('kasir')" role="radio" class="role-card">
+                            <i data-lucide="receipt-text" class="role-icon !w-7 !h-7"></i>
+                            <span class="font-display text-lg font-semibold leading-none mt-1">Kasir</span>
+                            <span class="text-[13px] leading-snug text-brand-secondary">Catat pesanan &amp; bayar</span>
+                        </button>
+                        <button type="button" id="role-dapur" onclick="selectRole('dapur')" role="radio" class="role-card">
+                            <i data-lucide="chef-hat" class="role-icon !w-7 !h-7"></i>
+                            <span class="font-display text-lg font-semibold leading-none mt-1">Dapur</span>
+                            <span class="text-[13px] leading-snug text-brand-secondary">Antrian &amp; produksi</span>
+                        </button>
+                    </div>
+                </fieldset>
+
+                {{-- Username --}}
+                <div>
+                    <label for="username" class="block text-[15px] font-medium text-brand-ink mb-2">Username</label>
+                    <div class="relative">
+                        <i data-lucide="user-round" class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-secondary pointer-events-none"></i>
+                        <input
+                            type="text"
+                            name="username"
+                            id="username"
+                            value="{{ old('username') }}"
+                            placeholder="Masukkan username"
+                            required
+                            autocomplete="username"
+                            class="field pl-11 pr-4"
+                        >
+                    </div>
+                </div>
+
+                {{-- Password --}}
+                <div>
+                    <label for="password" class="block text-[15px] font-medium text-brand-ink mb-2">Password</label>
+                    <div class="relative">
+                        <i data-lucide="lock-keyhole" class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-secondary pointer-events-none"></i>
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            placeholder="Masukkan password"
+                            required
+                            autocomplete="current-password"
+                            class="field pl-11 pr-12"
+                        >
+                        <button
+                            type="button"
+                            onclick="togglePasswordVisibility()"
+                            class="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-brand-secondary hover:text-brand-ink rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
+                            title="Lihat/Sembunyikan Password"
+                            aria-label="Lihat atau sembunyikan password"
+                        >
+                            <span id="eyeIconOpen"><i data-lucide="eye"></i></span>
+                            <span id="eyeIconClosed" class="hidden"><i data-lucide="eye-off"></i></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none text-brand-ink text-[15px]">
+                        <input type="checkbox" name="remember" id="remember" class="w-[18px] h-[18px] accent-brand-red">
+                        Ingat saya
+                    </label>
+                    <a href="javascript:void(0)" onclick="alert('Silakan hubungi Owner untuk mereset kata sandi Anda.')" class="text-brand-red hover:underline underline-offset-2 text-[15px] font-medium">
+                        Lupa password?
+                    </a>
+                </div>
+
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="w-full h-12 px-4 bg-brand-red hover:bg-brand-redHover disabled:opacity-70 disabled:cursor-wait text-white font-semibold rounded transition-colors text-base flex items-center justify-center gap-2"
+                >
+                    <span id="submitBtnIcon"><i data-lucide="log-in"></i></span>
+                    <span id="submitBtnText">Masuk sebagai Dapur</span>
+                </button>
+
+                <p class="text-center text-brand-secondary text-[15px]">
+                    Belum punya akun? <span class="text-brand-ink font-medium">Hubungi Owner.</span>
+                </p>
+            </form>
+
+            @env('local')
+                <p class="mt-8 pt-4 border-t border-dashed border-brand-border text-center text-[13px] text-brand-secondary leading-relaxed">
+                    Akun demo (password <code class="font-mono">password123</code>):
+                    <button type="button" onclick="quickFill('owner', 'owner', 'password123')" class="underline underline-offset-2 hover:text-brand-red">owner</button> &middot;
+                    <button type="button" onclick="quickFill('kasir', 'kasir', 'password123')" class="underline underline-offset-2 hover:text-brand-red">kasir</button> &middot;
+                    <button type="button" onclick="quickFill('dapur', 'agus', 'password123')" class="underline underline-offset-2 hover:text-brand-red">agus (dapur)</button>
+                </p>
+            @endenv
+
+            <p class="mt-8 text-center text-[13px] text-brand-secondary/70">&copy; 2026 Madam Dimsum &middot; Tim AstroBoys</p>
+        </div>
+    </main>
+
     <script>
-        const roleFeatures = {
-            dapur: {
-                title: 'Dapur',
-                feat1: 'Lihat antrian pesanan masuk',
-                feat2: 'Catat produksi & penggunaan bahan',
-                feat3: 'Lihat produk yang perlu diproduksi',
-                defaultUsername: 'agus'
-            },
-            kasir: {
-                title: 'Kasir',
-                feat1: 'Input transaksi kasir & kembalian',
-                feat2: 'Cetak dan cetak ulang struk pesanan',
-                feat3: 'Pantau status ketersediaan stok',
-                defaultUsername: 'kasir'
-            },
-            owner: {
-                title: 'Owner',
-                feat1: 'Pantau penjualan hari ini & grafik 7 hari',
-                feat2: 'Kelola produk, stok, dan pemasok',
-                feat3: 'Laporan penjualan & manajemen pengguna',
-                defaultUsername: 'owner'
-            }
-        };
+        const roleTitles = { owner: 'Owner', kasir: 'Kasir', dapur: 'Dapur' };
 
         function selectRole(role) {
             document.getElementById('roleInput').value = role;
-
-            // Reset class semua tombol peran
-            const buttons = ['owner', 'kasir', 'dapur'];
-            buttons.forEach(r => {
-                const btn = document.getElementById('role-' + r);
-                if (r === role) {
-                    btn.className = 'role-btn py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border bg-brand-red border-brand-red text-white shadow-sm';
-                } else {
-                    btn.className = 'role-btn py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border bg-white border-stone-200 text-stone-700 hover:border-stone-300';
-                }
+            Object.keys(roleTitles).forEach(r => {
+                document.getElementById('role-' + r).setAttribute('aria-checked', r === role ? 'true' : 'false');
             });
-
-            // Update text tombol submit
-            const roleInfo = roleFeatures[role];
-            document.getElementById('submitBtnText').textContent = 'Masuk sebagai ' + roleInfo.title;
-
-            // Update teks keunggulan peran di sisi kiri (efek transisi halus)
-            const feat1 = document.getElementById('feat1');
-            const feat2 = document.getElementById('feat2');
-            const feat3 = document.getElementById('feat3');
-
-            feat1.textContent = roleInfo.feat1;
-            feat2.textContent = roleInfo.feat2;
-            feat3.textContent = roleInfo.feat3;
+            document.getElementById('submitBtnText').textContent = 'Masuk sebagai ' + roleTitles[role];
         }
 
         function togglePasswordVisibility() {
             const passInput = document.getElementById('password');
-            const eyeOpen = document.getElementById('eyeIconOpen');
-            const eyeClosed = document.getElementById('eyeIconClosed');
-
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                eyeOpen.classList.add('hidden');
-                eyeClosed.classList.remove('hidden');
-            } else {
-                passInput.type = 'password';
-                eyeOpen.classList.remove('hidden');
-                eyeClosed.classList.add('hidden');
-            }
+            const show = passInput.type === 'password';
+            passInput.type = show ? 'text' : 'password';
+            document.getElementById('eyeIconOpen').classList.toggle('hidden', show);
+            document.getElementById('eyeIconClosed').classList.toggle('hidden', !show);
         }
 
         function quickFill(role, username, password) {
@@ -355,12 +197,34 @@
             document.getElementById('password').value = password;
         }
 
-        // Jalankan initial state sesuai role saat reload
+        // Sapaan sesuai jam di perangkat pengguna.
+        function setSapaan() {
+            const h = new Date().getHours();
+            const waktu = h < 11 ? 'pagi' : h < 15 ? 'siang' : h < 18 ? 'sore' : 'malam';
+            document.getElementById('sapaan').textContent = 'Selamat ' + waktu;
+        }
+
+        // Status tombol saat dikirim, supaya tidak diklik dua kali.
+        document.getElementById('loginForm').addEventListener('submit', () => {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtnIcon').innerHTML = '<i data-lucide="loader-circle" class="animate-spin"></i>';
+            document.getElementById('submitBtnText').textContent = 'Memeriksa…';
+            window.renderIcons();
+        });
+
+        // Kembali lewat tombol Back: pulihkan tombol.
+        window.addEventListener('pageshow', (e) => {
+            if (!e.persisted) return;
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtnIcon').innerHTML = '<i data-lucide="log-in"></i>';
+            selectRole(document.getElementById('roleInput').value || 'dapur');
+            window.renderIcons();
+        });
+
         window.addEventListener('DOMContentLoaded', () => {
-            const currentRole = document.getElementById('roleInput').value || 'dapur';
-            selectRole(currentRole);
+            setSapaan();
+            selectRole(document.getElementById('roleInput').value || 'dapur');
         });
     </script>
 </body>
 </html>
-

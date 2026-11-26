@@ -3,196 +3,196 @@
 @section('title', 'Pengguna & Hak Akses - Owner')
 @section('page_title', 'Pengguna & Hak Akses')
 
-@section('content')
-<div class="space-y-6 max-w-7xl">
+@php
+    $ikonPeran = ['owner' => 'store', 'kasir' => 'receipt-text', 'dapur' => 'chef-hat'];
+@endphp
 
-    <!-- ==================== TABEL PENGGUNA (FRAME 8) ==================== -->
-    <div class="bg-white rounded-2xl border border-[#EADFD3] shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-[#EADFD3] flex items-center justify-between">
+@section('content')
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+
+    <!-- ==================== DAFTAR PENGGUNA ==================== -->
+    <section class="kartu overflow-hidden" aria-labelledby="judulPengguna">
+        <div class="px-6 py-5 border-b border-brand-border flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h3 class="text-sm font-bold text-stone-900">Daftar Akun Pengguna</h3>
-                <p class="text-xs text-stone-400 mt-0.5">Kelola kredensial dan hak akses karyawan Madam Dimsum</p>
+                <h3 id="judulPengguna" class="kartu-judul">Daftar Akun Pengguna</h3>
+                <p class="text-[15px] text-brand-secondary">Kelola kredensial dan hak akses karyawan Madam Dimsum</p>
             </div>
-            <!-- Tombol Tambah Pengguna -->
-            <button 
-                type="button" 
-                onclick="openModalTambahPengguna()" 
-                class="px-4 py-2 rounded-lg bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
-            >
-                <span>+ Tambah Pengguna</span>
+            <button type="button" onclick="openModalTambahPengguna()" class="btn btn-primary">
+                <i data-lucide="user-plus"></i> Tambah Pengguna
             </button>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-[#FAF7F2] text-stone-500 font-bold border-b border-[#EADFD3]">
+            <table class="tabel">
+                <thead>
                     <tr>
-                        <th class="py-3.5 px-6">Nama</th>
-                        <th class="py-3.5 px-6">Username</th>
-                        <th class="py-3.5 px-6">Peran</th>
-                        <th class="py-3.5 px-6">Status</th>
-                        <th class="py-3.5 px-6 text-right">Aksi</th>
+                        <th>Nama</th>
+                        <th>Username</th>
+                        <th>Peran</th>
+                        <th>Status</th>
+                        <th class="text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#EADFD3] text-stone-800 font-medium">
+                <tbody>
                     @forelse($users as $u)
-                        <tr class="hover:bg-stone-50/70 transition {{ !$u->is_active ? 'opacity-60 bg-stone-50/40' : '' }}">
-                            <!-- Nama -->
-                            <td class="py-4 px-6 font-bold text-stone-900">
-                                {{ $u->name }}
-                                @if($u->id === Auth::id())
-                                    <span class="text-[10px] text-brand-red font-semibold ml-1.5">(Anda)</span>
-                                @endif
+                        <tr class="{{ !$u->is_active ? 'bg-brand-lightBg/60 text-brand-secondary' : '' }}">
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <span class="w-9 h-9 rounded-full flex items-center justify-center font-semibold shrink-0 {{ $u->is_active ? 'bg-[#FCF1EF] text-brand-red' : 'bg-[#F3ECE4] text-brand-secondary' }}">
+                                        {{ mb_strtoupper(mb_substr($u->name, 0, 1)) }}
+                                    </span>
+                                    <span class="font-semibold {{ $u->is_active ? 'text-brand-ink' : '' }}">
+                                        {{ $u->name }}
+                                        @if($u->id === Auth::id())
+                                            <span class="text-[13px] text-brand-red font-medium ml-1">(Anda)</span>
+                                        @endif
+                                    </span>
+                                </div>
                             </td>
-
-                            <!-- Username -->
-                            <td class="py-4 px-6 font-mono text-[11px] text-stone-600">
-                                {{ $u->username }}
-                            </td>
-
-                            <!-- Peran -->
-                            <td class="py-4 px-6">
-                                <span class="capitalize font-semibold text-stone-800">
+                            <td class="text-brand-secondary">{{ $u->username }}</td>
+                            <td>
+                                <span class="inline-flex items-center gap-1.5 capitalize">
+                                    <i data-lucide="{{ $ikonPeran[$u->role] ?? 'user' }}" class="!w-4 !h-4 text-brand-secondary"></i>
                                     {{ $u->role }}
                                 </span>
                             </td>
-
-                            <!-- Status (Aktif / Nonaktif - BR-10, UAT-10) -->
-                            <td class="py-4 px-6">
+                            <td>
                                 @if($u->is_active)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-[#2E8B57] bg-[#2E8B57]/10 border border-[#2E8B57]/20">
-                                        Aktif
+                                    <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[13px] font-semibold bg-[#E6F3EB] text-[#2E7D4F]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[#2E8B57]"></span> Aktif
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-red-600 bg-red-100 border border-red-200">
-                                        Nonaktif
+                                    <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[13px] font-semibold bg-[#F3ECE4] text-brand-secondary">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[#B9ABA0]"></span> Nonaktif
                                     </span>
                                 @endif
                             </td>
-
-                            <!-- Aksi -->
-                            <td class="py-4 px-6 text-right whitespace-nowrap">
-                                @if($u->role === 'owner')
-                                    <button 
-                                        type="button" 
-                                        onclick="openModalReset('{{ $u->id }}', '{{ $u->name }}')" 
-                                        class="text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline"
-                                    >
-                                        Reset Password
+                            <td class="text-right whitespace-nowrap">
+                                <div class="inline-flex items-center gap-1">
+                                    <button type="button" onclick="openModalReset('{{ $u->id }}', '{{ $u->name }}')" class="btn btn-ghost btn-sm">
+                                        <i data-lucide="key-round" class="!w-4 !h-4"></i> {{ $u->role === 'owner' ? 'Reset Password' : 'Reset' }}
                                     </button>
-                                @else
-                                    <button 
-                                        type="button" 
-                                        onclick="openModalReset('{{ $u->id }}', '{{ $u->name }}')" 
-                                        class="text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline"
-                                    >
-                                        Reset
-                                    </button>
-                                    <span class="text-stone-300 mx-1.5">&middot;</span>
-                                    <form action="{{ route('owner.pengguna.toggle', $u->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button 
-                                            type="submit" 
-                                            onclick="return confirm('Apakah Anda yakin ingin {{ $u->is_active ? 'menonaktifkan (UAT-10)' : 'mengaktifkan kembali' }} akun {{ $u->name }}?')" 
-                                            class="text-xs font-semibold {{ $u->is_active ? 'text-brand-red hover:underline' : 'text-emerald-600 hover:underline' }}"
-                                        >
-                                            {{ $u->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                        </button>
-                                    </form>
-                                @endif
+                                    @if($u->role !== 'owner')
+                                        <form action="{{ route('owner.pengguna.toggle', $u->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                onclick="return confirm('Apakah Anda yakin ingin {{ $u->is_active ? 'menonaktifkan (UAT-10)' : 'mengaktifkan kembali' }} akun {{ $u->name }}?')"
+                                                class="btn btn-sm {{ $u->is_active ? 'btn-danger' : 'btn-secondary !text-[#2E7D4F]' }}"
+                                            >
+                                                <i data-lucide="{{ $u->is_active ? 'user-x' : 'user-check' }}" class="!w-4 !h-4"></i>
+                                                {{ $u->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-8 text-center text-stone-400">Belum ada akun pengguna.</td>
+                            <td colspan="5">
+                                <div class="kosong">
+                                    <i data-lucide="users"></i>
+                                    <p class="kosong-judul">Belum ada akun pengguna</p>
+                                    <p class="kosong-sub">Tambahkan akun untuk kasir dan dapur.</p>
+                                </div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
-    <!-- ==================== RINGKASAN HAK AKSES PERAN (FRAME 8 BAWAH) ==================== -->
-    <div class="bg-white p-6 rounded-2xl border border-[#EADFD3] shadow-sm">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-stone-900 mb-3">Hak Akses Peran</h4>
-        
-        <div class="space-y-2 text-xs text-stone-600">
-            <p><b class="text-stone-900 font-semibold">Owner:</b> Dashboard, Produk & Stok, Pemasok, Laporan, Riwayat Transaksi, Pengguna, Pencadangan</p>
-            <p><b class="text-stone-900 font-semibold">Kasir:</b> Transaksi, Cek Stok, Riwayat Saya</p>
-            <p><b class="text-stone-900 font-semibold">Dapur:</b> Antrian Pesanan, Catat Produksi, Stok Dapur, Riwayat Produksi</p>
-        </div>
-
-        <p class="text-[11px] text-stone-400 italic mt-4 pt-3 border-t border-stone-100">
-            *Pengguna tidak dihapus melainkan dinonaktifkan agar riwayat transaksi tetap terjaga (BR-10).
+    <!-- ==================== HAK AKSES PERAN ==================== -->
+    <aside class="kartu p-6 xl:sticky xl:top-[96px]" aria-labelledby="judulHakAkses">
+        <h3 id="judulHakAkses" class="kartu-judul mb-4">Hak Akses Peran</h3>
+        <dl class="space-y-4">
+            @foreach([
+                ['owner', 'Owner', 'Dashboard, Produk & Stok, Pemasok, Laporan, Riwayat Transaksi, Pengguna, Pencadangan'],
+                ['kasir', 'Kasir', 'Transaksi, Cek Stok, Riwayat Saya'],
+                ['dapur', 'Dapur', 'Antrian Pesanan, Catat Produksi, Stok Dapur, Riwayat Produksi'],
+            ] as [$kode, $nama, $akses])
+                <div class="flex gap-3">
+                    <span class="w-9 h-9 rounded-full bg-brand-lightBg border border-brand-border text-brand-secondary flex items-center justify-center shrink-0">
+                        <i data-lucide="{{ $ikonPeran[$kode] }}" class="!w-4 !h-4"></i>
+                    </span>
+                    <div>
+                        <dt class="font-semibold">{{ $nama }}</dt>
+                        <dd class="text-[15px] text-brand-secondary">{{ $akses }}</dd>
+                    </div>
+                </div>
+            @endforeach
+        </dl>
+        <p class="bantuan flex items-start gap-2 mt-5 pt-4 border-t border-brand-border">
+            <i data-lucide="info" class="!w-4 !h-4 mt-0.5"></i>
+            Pengguna tidak dihapus, hanya dinonaktifkan, supaya riwayat transaksinya tetap tersimpan.
         </p>
-    </div>
+    </aside>
 
 </div>
 
-<!-- Modal Tambah Pengguna (FR-29) -->
-<div id="modalTambahPengguna" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 border border-[#EADFD3] shadow-2xl relative">
-        <div class="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
-            <h3 class="text-base font-bold text-stone-900">Tambah Pengguna Baru</h3>
-            <button type="button" onclick="closeModalTambahPengguna()" class="text-stone-400 hover:text-stone-700 p-1">✕</button>
+<!-- ==================== MODAL TAMBAH PENGGUNA ==================== -->
+<div id="modalTambahPengguna" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="judulTambahPengguna">
+    <div class="modal-panel max-w-md">
+        <div class="modal-kepala">
+            <h3 id="judulTambahPengguna" class="kartu-judul">Tambah Pengguna Baru</h3>
+            <button type="button" onclick="closeModalTambahPengguna()" class="btn btn-ghost btn-sm" aria-label="Tutup"><i data-lucide="x"></i></button>
         </div>
 
-        <form action="{{ route('owner.pengguna.store') }}" method="POST" class="space-y-4">
+        <form action="{{ route('owner.pengguna.store') }}" method="POST">
             @csrf
-            <div>
-                <label for="name" class="block text-xs font-semibold text-stone-600 mb-1.5">Nama Lengkap</label>
-                <input type="text" name="name" id="name" placeholder="misal: Siti Kasir" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red">
+            <div class="modal-isi space-y-4">
+                <div>
+                    <label for="name" class="label">Nama lengkap</label>
+                    <input type="text" name="name" id="name" placeholder="misal: Siti Kasir" required class="field">
+                </div>
+                <div>
+                    <label for="username" class="label">Username</label>
+                    <input type="text" name="username" id="username" placeholder="misal: siti" required class="field" autocomplete="off">
+                    <p class="bantuan">Harus unik, dipakai untuk masuk.</p>
+                </div>
+                <div>
+                    <label for="password" class="label">Kata sandi awal</label>
+                    <input type="password" name="password" id="password" value="password123" required class="field" autocomplete="new-password">
+                </div>
+                <div>
+                    <label for="role" class="label">Peran</label>
+                    <select name="role" id="role" required class="field">
+                        <option value="kasir">Kasir</option>
+                        <option value="dapur">Dapur</option>
+                        <option value="owner">Owner</option>
+                    </select>
+                </div>
             </div>
-
-            <div>
-                <label for="username" class="block text-xs font-semibold text-stone-600 mb-1.5">Username (Unik)</label>
-                <input type="text" name="username" id="username" placeholder="misal: siti" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red">
-            </div>
-
-            <div>
-                <label for="password" class="block text-xs font-semibold text-stone-600 mb-1.5">Kata Sandi Awal</label>
-                <input type="password" name="password" id="password" value="password123" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-red">
-            </div>
-
-            <div>
-                <label for="role" class="block text-xs font-semibold text-stone-600 mb-1.5">Peran (Role)</label>
-                <select name="role" id="role" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-brand-red cursor-pointer">
-                    <option value="kasir">Kasir</option>
-                    <option value="dapur">Dapur</option>
-                    <option value="owner">Owner</option>
-                </select>
-            </div>
-
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-100">
-                <button type="button" onclick="closeModalTambahPengguna()" class="px-4 py-2.5 rounded-lg border border-[#EADFD3] text-xs font-semibold text-stone-600 hover:bg-stone-50">Batal</button>
-                <button type="submit" class="px-5 py-2.5 rounded-lg bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm">Simpan Pengguna</button>
+            <div class="modal-kaki">
+                <button type="button" onclick="closeModalTambahPengguna()" class="btn btn-secondary">Batal</button>
+                <button type="submit" class="btn btn-primary" data-loading-text="Menyimpan…"><i data-lucide="check"></i> Simpan Pengguna</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Reset Password (FR-04, FR-29) -->
-<div id="modalResetPass" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-[#EADFD3] shadow-2xl relative">
-        <div class="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
-            <h3 class="text-base font-bold text-stone-900">Reset Password Pengguna</h3>
-            <button type="button" onclick="closeModalReset()" class="text-stone-400 hover:text-stone-700 p-1">✕</button>
+<!-- ==================== MODAL RESET PASSWORD ==================== -->
+<div id="modalResetPass" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="judulReset">
+    <div class="modal-panel max-w-md">
+        <div class="modal-kepala">
+            <h3 id="judulReset" class="kartu-judul">Reset Password</h3>
+            <button type="button" onclick="closeModalReset()" class="btn btn-ghost btn-sm" aria-label="Tutup"><i data-lucide="x"></i></button>
         </div>
 
-        <form id="formResetPass" method="POST" class="space-y-4">
+        <form id="formResetPass" method="POST">
             @csrf
-            <p class="text-xs text-stone-600">
-                Reset kata sandi untuk pengguna <b id="resetUserName" class="text-stone-900"></b> (FR-04).
-            </p>
-
-            <div>
-                <label for="new_password" class="block text-xs font-semibold text-stone-600 mb-1.5">Password Baru</label>
-                <input type="text" name="password" id="new_password" value="password123" required class="w-full px-3.5 py-2.5 bg-white border border-[#EADFD3] rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-red">
+            <div class="modal-isi space-y-4">
+                <p>Atur kata sandi baru untuk <b id="resetUserName"></b>.</p>
+                <div>
+                    <label for="new_password" class="label">Password baru</label>
+                    <input type="text" name="password" id="new_password" value="password123" required class="field font-semibold" autocomplete="off">
+                </div>
             </div>
-
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-100">
-                <button type="button" onclick="closeModalReset()" class="px-4 py-2.5 rounded-lg border border-[#EADFD3] text-xs font-semibold text-stone-600 hover:bg-stone-50">Batal</button>
-                <button type="submit" class="px-5 py-2.5 rounded-lg bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold shadow-sm">Simpan Password Baru</button>
+            <div class="modal-kaki">
+                <button type="button" onclick="closeModalReset()" class="btn btn-secondary">Batal</button>
+                <button type="submit" class="btn btn-primary" data-loading-text="Menyimpan…"><i data-lucide="key-round" class="!w-4 !h-4"></i> Simpan Password Baru</button>
             </div>
         </form>
     </div>
@@ -202,6 +202,7 @@
 <script>
     function openModalTambahPengguna() {
         document.getElementById('modalTambahPengguna').classList.remove('hidden');
+        document.getElementById('name').focus();
     }
     function closeModalTambahPengguna() {
         document.getElementById('modalTambahPengguna').classList.add('hidden');
@@ -210,11 +211,15 @@
         document.getElementById('resetUserName').textContent = name;
         document.getElementById('formResetPass').action = `/owner/pengguna/${userId}/reset`;
         document.getElementById('modalResetPass').classList.remove('hidden');
+        document.getElementById('new_password').select();
     }
     function closeModalReset() {
         document.getElementById('modalResetPass').classList.add('hidden');
     }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeModalTambahPengguna(); closeModalReset(); }
+    });
+    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }));
 </script>
 @endpush
 @endsection
-
