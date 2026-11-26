@@ -31,6 +31,8 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     // Frame 5: Pemasok & Kebutuhan Stok
     Route::get('/pemasok', [OwnerController::class, 'pemasok'])->name('owner.pemasok');
     Route::post('/pemasok', [OwnerController::class, 'storePemasok'])->name('owner.pemasok.store');
+    Route::post('/pemasok/{supplier}', [OwnerController::class, 'updatePemasok'])->name('owner.pemasok.update');
+    Route::post('/pemasok/{supplier}/hapus', [OwnerController::class, 'destroyPemasok'])->name('owner.pemasok.destroy');
 
     // Frame 6: Laporan Penjualan & Ekspor
     Route::get('/laporan', [OwnerController::class, 'laporan'])->name('owner.laporan');

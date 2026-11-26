@@ -50,6 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/stok-masuk', [OwnerController::class, 'storeStokMasuk']);
         Route::get('/pemasok', [OwnerController::class, 'pemasok']);
         Route::post('/pemasok', [OwnerController::class, 'storePemasok']);
+        Route::post('/pemasok/{supplier}', [OwnerController::class, 'updatePemasok']);
+        Route::delete('/pemasok/{supplier}', [OwnerController::class, 'destroyPemasok']);
         Route::get('/laporan', [OwnerController::class, 'laporan']);
     });
 

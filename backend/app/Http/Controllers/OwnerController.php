@@ -609,14 +609,17 @@ class OwnerController extends Controller
     {
         $this->checkOwnerAccess();
 
-        // Data pemasok beserta produk yang dipasok & kiriman terakhir
-        $suppliers = Supplier::with(['products', 'stockMovements' => function ($q) {
-            $q->where('jenis', 'masuk')->orderBy('tanggal', 'desc');
-        }])->get();
+        // Data pemasok beserta produk yang dipasok & kiriman terakhir (stok masuk)
+        $suppliers = Supplier::with([
+            'products' => fn ($q) => $q->where('is_active', true)->orderBy('nama'),
+            'stockMovements' => fn ($q) => $q->where('jenis', 'masuk')->orderBy('tanggal', 'desc'),
+        ])->orderBy('nama')->get();
 
-        // Daftar produk yang menipis (Kebutuhan Stok - FR-26, BR-04)
-        $kebutuhanStok = Product::where('is_active', true)
+        // Daftar produk yang menipis/habis (Kebutuhan Stok - FR-26, BR-03, BR-04)
+        $kebutuhanStok = Product::with('supplier')
+            ->where('is_active', true)
             ->whereColumn('stok', '<', 'stok_minimum')
+            ->orderBy('nama')
             ->get();
 
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -627,7 +630,35 @@ class OwnerController extends Controller
             ]);
         }
 
-        return view('owner.pemasok', compact('suppliers', 'kebutuhanStok'));
+        // Dikelompokkan per pemasok supaya pesanan bisa dikirim ke masing-masing
+        $kebutuhanPerPemasok = $kebutuhanStok->groupBy(fn ($p) => $p->supplier_id ?? 0)
+            ->map(fn ($produk) => [
+                'pemasok' => $produk->first()->supplier,
+                'produk' => $produk,
+            ])
+            ->sortBy(fn ($g) => $g['pemasok'] ? $g['pemasok']->nama : "\u{FFFF}")
+            ->values();
+
+        return view('owner.pemasok', compact('suppliers', 'kebutuhanStok', 'kebutuhanPerPemasok'));
+    }
+
+    /** Aturan validasi pemasok (tambah & edit). Kontak boleh kosong sesuai ERD. */
+    private function validasiPemasok(Request $request): array
+    {
+        $request->merge([
+            'nama' => trim((string) $request->input('nama')),
+            'kontak' => trim((string) $request->input('kontak')) ?: null,
+        ]);
+
+        return $request->validate([
+            'nama' => 'required|string|max:100',
+            'kontak' => ['nullable', 'string', 'max:20', 'regex:/^\+?[0-9][0-9\s\-().]{6,}$/'],
+        ], [
+            'nama.required' => 'Nama pemasok wajib diisi.',
+            'nama.max' => 'Nama pemasok maksimal 100 karakter.',
+            'kontak.max' => 'Nomor kontak maksimal 20 karakter.',
+            'kontak.regex' => 'Nomor kontak hanya boleh angka, spasi, tanda minus, atau + di depan (misal 0812-3456-7890).',
+        ]);
     }
 
     /**
@@ -637,15 +668,7 @@ class OwnerController extends Controller
     {
         $this->checkOwnerAccess();
 
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'kontak' => 'required|string|max:50',
-        ], [
-            'nama.required' => 'Nama pemasok wajib diisi.',
-            'kontak.required' => 'Nomor kontak pemasok wajib diisi.',
-        ]);
-
-        $supplier = Supplier::create($validated);
+        $supplier = Supplier::create($this->validasiPemasok($request));
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
@@ -656,6 +679,80 @@ class OwnerController extends Controller
         }
 
         return redirect()->route('owner.pemasok')->with('success', "Pemasok '{$supplier->nama}' berhasil ditambahkan!");
+    }
+
+    /**
+     * Frame 5: Edit Pemasok (FR-25)
+     */
+    public function updatePemasok(Request $request, Supplier $supplier)
+    {
+        $this->checkOwnerAccess();
+
+        $lama = $supplier->only(['nama', 'kontak']);
+        $supplier->update($this->validasiPemasok($request));
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'aksi' => 'ubah_pemasok',
+            'tabel' => 'suppliers',
+            'data_lama' => ['id' => $supplier->id] + $lama,
+            'data_baru' => ['id' => $supplier->id] + $supplier->only(['nama', 'kontak']),
+            'waktu' => Carbon::now(),
+        ]);
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => "Pemasok '{$supplier->nama}' berhasil diperbarui.",
+                'data' => $supplier,
+            ]);
+        }
+
+        return redirect()->route('owner.pemasok')->with('success', "Pemasok '{$supplier->nama}' berhasil diperbarui.");
+    }
+
+    /**
+     * Frame 5: Hapus Pemasok (FR-25).
+     * Hanya bila belum dipakai produk maupun riwayat stok masuk, supaya riwayat tidak kehilangan asal barang.
+     */
+    public function destroyPemasok(Request $request, Supplier $supplier)
+    {
+        $this->checkOwnerAccess();
+
+        $jumlahProduk = $supplier->products()->count();
+        $jumlahRiwayat = $supplier->stockMovements()->count();
+
+        if ($jumlahProduk > 0 || $jumlahRiwayat > 0) {
+            $pesan = "Pemasok '{$supplier->nama}' tidak bisa dihapus karena masih tercatat di "
+                . collect([
+                    $jumlahProduk ? "{$jumlahProduk} produk" : null,
+                    $jumlahRiwayat ? "{$jumlahRiwayat} riwayat stok masuk" : null,
+                ])->filter()->implode(' dan ')
+                . '. Ubah pemasok produknya terlebih dahulu.';
+
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => $pesan, 'data' => null], 422);
+            }
+            return redirect()->route('owner.pemasok')->withErrors(['pemasok' => $pesan]);
+        }
+
+        $data = $supplier->only(['id', 'nama', 'kontak']);
+        $supplier->delete();
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'aksi' => 'hapus_pemasok',
+            'tabel' => 'suppliers',
+            'data_lama' => $data,
+            'data_baru' => null,
+            'waktu' => Carbon::now(),
+        ]);
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json(['success' => true, 'message' => "Pemasok '{$data['nama']}' berhasil dihapus.", 'data' => null]);
+        }
+
+        return redirect()->route('owner.pemasok')->with('success', "Pemasok '{$data['nama']}' berhasil dihapus.");
     }
 
     /**
