@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Backup;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Services\BackupService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -996,14 +998,15 @@ class OwnerController extends Controller
     /**
      * Frame 9: Pencadangan Data (FR-30)
      */
-    public function pencadangan(Request $request)
+    public function pencadangan(Request $request, BackupService $service)
     {
         $this->checkOwnerAccess();
 
-        $backups = \App\Models\Backup::orderBy('waktu', 'desc')->get();
-        $frekuensi = \App\Models\Setting::where('kunci', 'backup_frekuensi')->value('nilai') ?? 'Harian';
-        $jam = \App\Models\Setting::where('kunci', 'backup_jam')->value('nilai') ?? '02:00';
-        $terakhir = $backups->first();
+        $backups = Backup::orderBy('waktu', 'desc')->orderBy('id', 'desc')->get();
+        [$frekuensi, $jam] = $service->jadwal();
+        $terakhir = $backups->firstWhere('status', 'berhasil');
+        $jadwalBerikutnya = $service->jadwalBerikutnya();
+        $fileTersedia = $backups->mapWithKeys(fn ($b) => [$b->id => $service->fileAda($b)]);
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
@@ -1011,28 +1014,21 @@ class OwnerController extends Controller
                 'backups' => $backups,
                 'frekuensi' => $frekuensi,
                 'jam' => $jam,
+                'jadwal_berikutnya' => $jadwalBerikutnya->toIso8601String(),
             ]);
         }
 
-        return view('owner.pencadangan', compact('backups', 'frekuensi', 'jam', 'terakhir'));
+        return view('owner.pencadangan', compact('backups', 'frekuensi', 'jam', 'terakhir', 'jadwalBerikutnya', 'fileTersedia'));
     }
 
     /**
-     * Frame 9: Eksekusi Cadangkan Sekarang (Manual Backup - FR-30)
+     * Frame 9: Cadangkan Sekarang (Manual Backup - FR-30)
      */
-    public function createBackup(Request $request)
+    public function createBackup(Request $request, BackupService $service)
     {
         $this->checkOwnerAccess();
 
-        $filename = 'backups/backup_' . Carbon::now()->format('Y_m_d_His') . '.sqlite';
-
-        $backup = \App\Models\Backup::create([
-            'waktu' => Carbon::now(),
-            'ukuran_kb' => 1200,
-            'jenis' => 'manual',
-            'status' => 'berhasil',
-            'file_path' => $filename,
-        ]);
+        $backup = $service->buat('manual');
 
         ActivityLog::create([
             'user_id' => Auth::id(),
@@ -1043,7 +1039,58 @@ class OwnerController extends Controller
             'waktu' => Carbon::now(),
         ]);
 
-        return redirect()->route('owner.pencadangan')->with('success', 'Pencadangan database berhasil dibuat!');
+        if ($backup->status !== 'berhasil') {
+            return redirect()->route('owner.pencadangan')
+                ->withErrors(['backup' => 'Pencadangan gagal. Coba lagi atau periksa ruang penyimpanan server.']);
+        }
+
+        return redirect()->route('owner.pencadangan')->with('success', 'Cadangan data berhasil dibuat (' . $backup->ukuran_kb . ' KB).');
+    }
+
+    /**
+     * Frame 9: Unduh file cadangan (FR-30)
+     */
+    public function downloadBackup(Backup $backup, BackupService $service)
+    {
+        $this->checkOwnerAccess();
+
+        if (! $service->fileAda($backup)) {
+            return redirect()->route('owner.pencadangan')->withErrors(['backup' => 'File cadangan tidak ditemukan atau cadangan ini gagal dibuat.']);
+        }
+
+        return response()->download($service->pathAbsolut($backup), basename($backup->file_path), [
+            'Content-Type' => 'application/json',
+        ]);
+    }
+
+    /**
+     * Frame 9: Pulihkan data dari cadangan (FR-30, BR-11)
+     */
+    public function restoreBackup(Request $request, Backup $backup, BackupService $service)
+    {
+        $this->checkOwnerAccess();
+
+        $request->validate([
+            'konfirmasi' => ['required', 'in:PULIHKAN'],
+        ], [
+            'konfirmasi.required' => 'Ketik PULIHKAN untuk mengonfirmasi pemulihan.',
+            'konfirmasi.in' => 'Ketik PULIHKAN (huruf besar) untuk mengonfirmasi pemulihan.',
+        ]);
+
+        try {
+            $pengaman = $service->pulihkan($backup, Auth::id());
+        } catch (\RuntimeException $e) {
+            return redirect()->route('owner.pencadangan')->withErrors(['backup' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('owner.pencadangan')->withErrors(['backup' => 'Pemulihan gagal. Data tidak diubah.']);
+        }
+
+        $tanggal = $backup->waktu ? $backup->waktu->format('d M Y H:i') : '';
+        return redirect()->route('owner.pencadangan')->with(
+            'success',
+            "Data berhasil dipulihkan ke kondisi {$tanggal}. Kondisi sebelumnya disimpan sebagai cadangan " . $pengaman->waktu->format('d M Y H:i') . '.'
+        );
     }
 
     /**
@@ -1053,11 +1100,18 @@ class OwnerController extends Controller
     {
         $this->checkOwnerAccess();
 
-        $frekuensi = $request->input('frekuensi', 'Harian');
-        $jam = $request->input('jam', '02:00');
+        $data = $request->validate([
+            'frekuensi' => ['required', 'in:' . implode(',', BackupService::FREKUENSI)],
+            'jam' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
+        ], [
+            'frekuensi.required' => 'Frekuensi wajib dipilih.',
+            'frekuensi.in' => 'Frekuensi harus Harian, Mingguan, atau Bulanan.',
+            'jam.required' => 'Jam wajib dipilih.',
+            'jam.regex' => 'Format jam tidak valid.',
+        ]);
 
-        \App\Models\Setting::updateOrCreate(['kunci' => 'backup_frekuensi'], ['nilai' => $frekuensi]);
-        \App\Models\Setting::updateOrCreate(['kunci' => 'backup_jam'], ['nilai' => $jam]);
+        \App\Models\Setting::updateOrCreate(['kunci' => 'backup_frekuensi'], ['nilai' => $data['frekuensi']]);
+        \App\Models\Setting::updateOrCreate(['kunci' => 'backup_jam'], ['nilai' => $data['jam']]);
 
         return redirect()->route('owner.pencadangan')->with('success', 'Jadwal pencadangan otomatis berhasil diperbarui!');
     }

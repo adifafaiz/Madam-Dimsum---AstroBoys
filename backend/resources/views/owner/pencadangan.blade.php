@@ -3,6 +3,11 @@
 @section('title', 'Pencadangan Data - Owner')
 @section('page_title', 'Pencadangan Data')
 
+@php
+    $ukuran = fn ($kb) => $kb >= 1024 ? number_format($kb / 1024, 1, ',', '.') . ' MB' : number_format($kb, 0, ',', '.') . ' KB';
+    $gagalTerakhir = $backups->first() && $backups->first()->status === 'gagal';
+@endphp
+
 @section('content')
 <div class="space-y-6">
 
@@ -11,18 +16,29 @@
         <!-- ==================== CADANGKAN MANUAL ==================== -->
         <section class="kartu p-6 flex flex-col" aria-labelledby="judulManual">
             <div class="flex items-start gap-4 flex-1">
-                <span class="w-12 h-12 rounded-full bg-[#E6F3EB] text-[#2E7D4F] flex items-center justify-center shrink-0">
-                    <i data-lucide="shield-check" class="!w-6 !h-6"></i>
+                <span class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 {{ $terakhir ? 'bg-[#E6F3EB] text-[#2E7D4F]' : 'bg-[#FCF1E3] text-[#A15C07]' }}">
+                    <i data-lucide="{{ $terakhir ? 'shield-check' : 'shield-alert' }}" class="!w-6 !h-6"></i>
                 </span>
                 <div>
                     <h3 id="judulManual" class="kartu-judul">Pencadangan Data</h3>
-                    <p class="text-brand-secondary mt-1">
-                        Terakhir dicadangkan
-                        <b class="text-brand-ink font-semibold">{{ $terakhir && $terakhir->waktu ? $terakhir->waktu->format('d M Y, H:i') : '24 Nov 2026, 02:00' }}</b>
+                    @if($terakhir)
+                        <p class="text-brand-secondary mt-1">
+                            Cadangan terakhir
+                            <b class="text-brand-ink font-semibold">{{ $terakhir->waktu->locale('id')->translatedFormat('j M Y, H:i') }}</b>
+                            &middot; {{ $ukuran($terakhir->ukuran_kb) }}
+                        </p>
+                    @else
+                        <p class="text-brand-secondary mt-1">Belum ada cadangan yang berhasil. Buat cadangan pertama sekarang.</p>
+                    @endif
+                    @if($gagalTerakhir)
+                        <span class="mt-2 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#FCE6E3] text-[#B0261D] text-[13px] font-semibold">
+                            <i data-lucide="triangle-alert" class="!w-3.5 !h-3.5"></i> Percobaan terakhir gagal
+                        </span>
+                    @endif
+                    <p class="text-[15px] text-brand-secondary mt-2 flex flex-wrap items-center gap-1.5">
+                        <i data-lucide="calendar-clock" class="!w-4 !h-4"></i>
+                        Otomatis berikutnya: <b class="text-brand-ink font-semibold">{{ $jadwalBerikutnya->locale('id')->translatedFormat('l, j M Y H:i') }}</b>
                     </p>
-                    <span class="mt-2 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#E6F3EB] text-[#2E7D4F] text-[13px] font-semibold">
-                        <i data-lucide="check" class="!w-3.5 !h-3.5"></i> Berhasil
-                    </span>
                 </div>
             </div>
 
@@ -42,7 +58,7 @@
                 </span>
                 <div>
                     <h3 id="judulJadwal" class="kartu-judul">Jadwal Otomatis</h3>
-                    <p class="text-brand-secondary mt-1">Cadangan dibuat otomatis tanpa perlu ditekan.</p>
+                    <p class="text-brand-secondary mt-1">Harian: tiap hari &middot; Mingguan: tiap Senin &middot; Bulanan: tiap tanggal 1.</p>
                 </div>
             </div>
 
@@ -59,10 +75,13 @@
                 <div class="flex-1">
                     <label for="jam" class="label">Jam</label>
                     <select name="jam" id="jam" class="field">
-                        <option value="00:00" {{ $jam === '00:00' ? 'selected' : '' }}>00:00</option>
-                        <option value="01:00" {{ $jam === '01:00' ? 'selected' : '' }}>01:00</option>
-                        <option value="02:00" {{ $jam === '02:00' ? 'selected' : '' }}>02:00</option>
-                        <option value="03:00" {{ $jam === '03:00' ? 'selected' : '' }}>03:00</option>
+                        @for($h = 0; $h < 24; $h++)
+                            @php $opsiJam = sprintf('%02d:00', $h); @endphp
+                            <option value="{{ $opsiJam }}" {{ $jam === $opsiJam ? 'selected' : '' }}>{{ $opsiJam }}</option>
+                        @endfor
+                        @if(!str_ends_with($jam, ':00'))
+                            <option value="{{ $jam }}" selected>{{ $jam }}</option>
+                        @endif
                     </select>
                 </div>
                 <button type="submit" class="btn btn-secondary btn-lg" data-loading-text="Menyimpan…">
@@ -93,8 +112,8 @@
                 <tbody>
                     @forelse($backups as $b)
                         <tr>
-                            <td class="font-semibold whitespace-nowrap">{{ $b->waktu ? $b->waktu->format('d M Y H:i') : '-' }}</td>
-                            <td class="text-right text-brand-secondary whitespace-nowrap">{{ number_format($b->ukuran_kb / 1000, 1) }} MB</td>
+                            <td class="font-semibold whitespace-nowrap">{{ $b->waktu ? $b->waktu->locale('id')->translatedFormat('j M Y H:i') : '-' }}</td>
+                            <td class="text-right text-brand-secondary whitespace-nowrap">{{ $b->status === 'gagal' ? '-' : $ukuran($b->ukuran_kb) }}</td>
                             <td>
                                 <span class="inline-flex items-center gap-1.5 capitalize">
                                     <i data-lucide="{{ $b->jenis === 'otomatis' ? 'clock' : 'hand' }}" class="!w-4 !h-4 text-brand-secondary"></i>
@@ -113,14 +132,21 @@
                                 @endif
                             </td>
                             <td class="text-right whitespace-nowrap">
-                                <div class="inline-flex items-center gap-1">
-                                    <button type="button" onclick="alert('Mengunduh arsip cadangan {{ $b->file_path }}...')" class="btn btn-ghost btn-sm">
-                                        <i data-lucide="download" class="!w-4 !h-4"></i> Unduh
-                                    </button>
-                                    <button type="button" onclick="alert('Fitur Pulihkan (FR-30): Memulihkan database ke kondisi tanggal {{ $b->waktu ? $b->waktu->format('d M Y H:i') : '' }}.')" class="btn btn-ghost btn-sm !text-brand-red">
-                                        <i data-lucide="rotate-ccw" class="!w-4 !h-4"></i> Pulihkan
-                                    </button>
-                                </div>
+                                @if($fileTersedia[$b->id] ?? false)
+                                    <div class="inline-flex items-center gap-1">
+                                        <a href="{{ route('owner.pencadangan.unduh', $b) }}" class="btn btn-ghost btn-sm">
+                                            <i data-lucide="download" class="!w-4 !h-4"></i> Unduh
+                                        </a>
+                                        <button type="button" class="btn btn-ghost btn-sm !text-brand-red"
+                                                onclick="bukaPulihkan(this)"
+                                                data-url="{{ route('owner.pencadangan.pulihkan', $b) }}"
+                                                data-waktu="{{ $b->waktu ? $b->waktu->locale('id')->translatedFormat('l, j F Y') . ' pukul ' . $b->waktu->format('H:i') : '' }}">
+                                            <i data-lucide="rotate-ccw" class="!w-4 !h-4"></i> Pulihkan
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="text-[13px] text-brand-secondary">File tidak tersedia</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -140,4 +166,55 @@
     </section>
 
 </div>
+
+<!-- ==================== MODAL PULIHKAN ==================== -->
+<div id="modalPulihkan" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="judulPulihkan">
+    <div class="modal-panel max-w-lg">
+        <div class="modal-kepala">
+            <h3 id="judulPulihkan" class="kartu-judul flex items-center gap-2"><i data-lucide="rotate-ccw" class="text-brand-red"></i> Pulihkan Data</h3>
+            <button type="button" onclick="tutupPulihkan()" class="btn btn-ghost btn-sm" aria-label="Tutup"><i data-lucide="x"></i></button>
+        </div>
+        <form id="formPulihkan" method="POST" action="">
+            @csrf
+            <div class="modal-isi space-y-4">
+                <p>Semua data (produk, stok, transaksi, pemasok, pengguna, log aktivitas) akan dikembalikan ke kondisi
+                    <b id="waktuPulihkan" class="text-brand-ink"></b>.</p>
+                <div class="px-4 py-3 rounded border border-[#F2D3CE] bg-[#FCF1EF] text-[15px] text-[#8E2A22] flex gap-3">
+                    <i data-lucide="triangle-alert" class="shrink-0 mt-0.5"></i>
+                    <span>Data yang dicatat setelah waktu tersebut akan hilang. Sebelum memulihkan, kondisi saat ini otomatis dicadangkan dulu, jadi masih bisa dikembalikan.</span>
+                </div>
+                <div>
+                    <label for="konfirmasi" class="label">Ketik <b>PULIHKAN</b> untuk melanjutkan</label>
+                    <input type="text" name="konfirmasi" id="konfirmasi" class="field" autocomplete="off" required oninput="cekKonfirmasi()">
+                </div>
+            </div>
+            <div class="modal-kaki">
+                <button type="button" onclick="tutupPulihkan()" class="btn btn-secondary">Batal</button>
+                <button type="submit" id="tombolPulihkan" class="btn btn-danger" data-loading-text="Memulihkan…" disabled>
+                    <i data-lucide="rotate-ccw" class="!w-4 !h-4"></i> Pulihkan Data
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    const modalPulihkan = document.getElementById('modalPulihkan');
+    function bukaPulihkan(tombol) {
+        document.getElementById('formPulihkan').action = tombol.dataset.url;
+        document.getElementById('waktuPulihkan').textContent = tombol.dataset.waktu;
+        document.getElementById('konfirmasi').value = '';
+        cekKonfirmasi();
+        modalPulihkan.classList.remove('hidden');
+        setTimeout(() => document.getElementById('konfirmasi').focus(), 30);
+    }
+    function tutupPulihkan() { modalPulihkan.classList.add('hidden'); }
+    function cekKonfirmasi() {
+        document.getElementById('tombolPulihkan').disabled = document.getElementById('konfirmasi').value.trim() !== 'PULIHKAN';
+    }
+    modalPulihkan.addEventListener('click', e => { if (e.target === modalPulihkan) tutupPulihkan(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') tutupPulihkan(); });
+</script>
+@endpush

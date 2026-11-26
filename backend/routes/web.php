@@ -50,6 +50,8 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/pencadangan', [OwnerController::class, 'pencadangan'])->name('owner.pencadangan');
     Route::post('/pencadangan', [OwnerController::class, 'createBackup'])->name('owner.pencadangan.store');
     Route::post('/pencadangan/schedule', [OwnerController::class, 'updateBackupSchedule'])->name('owner.pencadangan.schedule');
+    Route::get('/pencadangan/{backup}/unduh', [OwnerController::class, 'downloadBackup'])->name('owner.pencadangan.unduh');
+    Route::post('/pencadangan/{backup}/pulihkan', [OwnerController::class, 'restoreBackup'])->name('owner.pencadangan.pulihkan');
 });
 
 // Halaman Khusus Dapur (Mockup Dapur Frame 1 s.d. 4)
