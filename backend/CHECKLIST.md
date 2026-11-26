@@ -9,8 +9,8 @@
 >
 > Catatan lingkup:
 > - Yang diperiksa adalah folder `backend/` di repo utama.
-> - Test terakhir dijalankan (`php artisan test`, 26 November 2026, commit `22ccb02`): **36 test lulus, 146 assertion, 0 gagal**. Semua test fitur memakai route **web** (session). Belum ada satu pun test untuk route `/api/*`.
-> - **Temuan utama audit ulang:** fitur Kasir, Dapur, dan Owner sekarang jalan lewat halaman web (Blade + session). Route `/api/kasir|dapur|owner/*` sudah terdaftar dan import controller sudah lengkap, tetapi tidak memakai middleware auth. Karena itu `Auth::user()` selalu `null` dan **setiap panggilan API dibalas 403, untuk peran apa pun**. Frontend standalone belum bisa memakai API mana pun selain login.
+> - Test terakhir dijalankan (`php artisan test`, 26 November 2026, setelah pekerjaan keamanan API): **55 test lulus, 230 assertion, 0 gagal**. Test baru: `ApiSecurityTest` (19 test). Test fitur lainnya masih memakai route **web** (session).
+> - **Pembaruan 26 November 2026 (keamanan API, belum di-commit):** Sanctum, middleware `role`, proteksi grup `/api/*`, pesan login umum, throttle login, dan pembatasan `/api/demo-accounts` sudah dikerjakan. Baris yang berubah: 2.5–2.9, 2.11, 7.5, 7.7, 7.8, 7.10–7.12, 8.1, 8.3, 8.7, UAT-03, UAT-10, 5.7, 5.16. Baris lain tetap hasil audit `22ccb02`.
 
 ---
 
@@ -42,33 +42,33 @@
 | 2.2 | Tolak akun nonaktif (BR-10, FR-29) | Sudah | `AuthController@login` (HTTP 403) | — |
 | 2.3 | Tolak peran yang tidak cocok dengan akun | Sudah | `AuthController@login` (HTTP 422) | — |
 | 2.4 | Login web (session) + redirect sesuai peran | Sudah | `routes/web.php`, `/dashboard/{role}` → `owner.dashboard` / `dapur.antrian` / `kasir.transaksi` | — |
-| 2.5 ★ | Sanctum terpasang & login API mengembalikan token | Belum | `composer.json`, `app/Models/User.php` | Masih sama: `laravel/sanctum` tidak ada di `composer.json`. Tidak ada `config/sanctum.php`, migration `personal_access_tokens`, atau trait `HasApiTokens`. Respons login berisi `user` + `redirect_url`, tanpa token. Respons login juga mengirim `email`, padahal kolom itu tidak ada di ERD v2 (selalu `null`) |
-| 2.6 ★ | `GET /api/user` (cek sesi token) | Sebagian | `routes/api.php:58` | Route ada dengan `auth:sanctum`, tetapi guard `sanctum` belum ada, jadi akan error saat dipanggil |
-| 2.7 ★ | Logout API mencabut token | Sebagian | `AuthController@logout`, `POST /api/logout` | Baru logout session. Tidak ada pencabutan token dan route tidak dilindungi auth |
-| 2.8 ★ | Middleware peran (`role:kasir` / `role:dapur` / `role:owner`) per grup route | Sebagian | `bootstrap/app.php` (`withMiddleware` kosong); `checkOwnerAccess()`, `checkKasirAccess()`, `checkDapurAccess()` | Pengecekan peran sekarang ada di **setiap method** ketiga controller (manual, `abort(403)`), dan grup web memakai `auth`. Belum ada middleware `role` terdaftar, jadi pengecekan tersebar dan mudah terlupa di method baru |
-| 2.9 ★ | Grup route API (`/api/owner`, `/api/kasir`, `/api/dapur`) terlindungi auth | Belum | `routes/api.php:26-56` | Import `OwnerController`, `KasirController`, `DapurController` sudah ada (bug class tidak ditemukan sudah hilang). Namun ketiga grup **tanpa** middleware `auth`. API stateless tidak punya session, sehingga `Auth::user()` = `null` dan semua endpoint selalu 403. Perlu `auth:sanctum` + `role:{peran}` per grup. Beberapa aksi (batal transaksi, pengguna, pencadangan, ekspor) belum punya route API sama sekali |
+| 2.5 ★ | Sanctum terpasang & login API mengembalikan token | Sudah | `composer.json` (`laravel/sanctum` ^4.5), `config/sanctum.php`, migration `personal_access_tokens`, `User` (`HasApiTokens`), `AuthController@login` | — Dikerjakan 26 Nov. `POST /api/login` mengembalikan `data.token` (Bearer, ability = peran), `data.user`, `data.redirect_url`. Token kedaluwarsa 720 menit (`SANCTUM_EXPIRATION`). Kolom `email` (tidak ada di ERD) dihapus dari respons. Test: `ApiSecurityTest::test_login_api_mengembalikan_token_yang_bisa_dipakai` |
+| 2.6 ★ | `GET /api/user` (cek sesi token) | Sudah | `routes/api.php` | — Di dalam grup `auth:sanctum`, format `{success, message, data}`, hanya `id`, `name`, `username`, `role` |
+| 2.7 ★ | Logout API mencabut token | Sudah | `AuthController@logout`, `POST /api/logout` (grup `auth:sanctum`) | — Token yang sedang dipakai dihapus; token itu langsung ditolak (401). Logout web tetap lewat session. Test: `test_logout_api_mencabut_token` |
+| 2.8 ★ | Middleware peran (`role:kasir` / `role:dapur` / `role:owner`) per grup route | Sudah | `app/Http/Middleware/EnsureRole.php`, alias `role` di `bootstrap/app.php` | — Dipasang di grup API dan grup web `/owner`, `/kasir`, `/dapur`. Peran salah → 403 (JSON di API). Akun yang sudah dinonaktifkan: token dicabut (API 401) atau session dikeluarkan ke `/login` (web). `check*Access()` di controller dibiarkan sebagai lapisan kedua |
+| 2.9 ★ | Grup route API (`/api/owner`, `/api/kasir`, `/api/dapur`) terlindungi auth | Sudah | `routes/api.php` | — Ketiga grup dibungkus `auth:sanctum` + `role:{peran}`. Tamu → 401 JSON (bukan redirect), peran lain → 403 JSON, peran sendiri → 200. Catatan fitur (bukan keamanan): batal transaksi, pengguna, pencadangan, ekspor belum punya route API (lihat 5.7, 5.12, 5.14, 5.15) |
 | 2.10 | Halaman "Akses Ditolak" (FR-02) untuk web | Sudah | `resources/views/errors/akses-ditolak.blade.php` | Hanya dipakai di `/dashboard/{role}`. Akses lintas modul (misal kasir → `/owner/produk`) memakai `abort(403)` biasa, jadi tampil halaman 403 bawaan Laravel |
-| 2.11 | Pesan gagal login umum ("Username atau password salah"), termasuk saat peran salah, supaya username/peran tidak bocor | Belum | `AuthController@login` | Tidak berubah: username tidak ada → 404 "Username … tidak ditemukan"; akun nonaktif → 403 (dicek **sebelum** password); peran salah → 422 yang menyebut peran asli akun; password salah → 401. Ketiganya harus memakai satu pesan + satu kode HTTP. `AuthTest` perlu disesuaikan |
+| 2.11 ★ | Pesan gagal login umum ("Username atau password salah"), termasuk saat peran salah, supaya username/peran tidak bocor | Sudah | `AuthController@login`, `AuthController::loginGagal()` | — Username tidak ada, password salah, dan peran salah → **401 "Username atau password salah."** (web: satu pesan di form). Status aktif dicek **setelah** password benar → 403 "Akun Anda telah dinonaktifkan…". Akun nonaktif + password salah tetap mendapat pesan umum. `AuthTest` disesuaikan |
 
 ## 3. API Kasir
 
 | # | Kebutuhan | Status | File / Endpoint | Yang masih kurang |
 |---|-----------|--------|-----------------|-------------------|
-| 3.1 | Daftar produk aktif + stok + status stok | Sebagian | `KasirController@transaksi` & `@cekStok`; `GET /kasir/transaksi`, `GET /kasir/cek-stok`, `GET /api/kasir/cek-stok` | Jalan di web: produk aktif, cari, filter kategori, status Aman/Menipis/Habis di Blade. Di JSON, `status_stok` tidak ikut karena `Product` belum `$appends`. Respons memakai kunci `products`, bukan `data`. API selalu 403 (2.9) |
+| 3.1 | Daftar produk aktif + stok + status stok | Sebagian | `KasirController@transaksi` & `@cekStok`; `GET /kasir/transaksi`, `GET /kasir/cek-stok`, `GET /api/kasir/cek-stok` | Jalan di web: produk aktif, cari, filter kategori, status Aman/Menipis/Habis di Blade. Di JSON, `status_stok` tidak ikut karena `Product` belum `$appends`. Respons memakai kunci `products`, bukan `data` |
 | 3.2 | Simpan transaksi (keranjang, total, uang diterima, kembalian; tolak jika stok kurang atau uang kurang) | Sebagian | `KasirController@storeTransaksi`; `POST /kasir/transaksi`, `POST /api/kasir/transaksi` | Sudah benar: validasi item, `lockForUpdate()`, tolak stok kurang & uang kurang, harga dari DB (BR-08), movement `terjual` qty negatif + `saldo_setelah`, status `baru`, semua dalam 1 transaksi DB. **Cacat:** (a) jika produk yang sama muncul 2× di `items`, tiap baris dicek terhadap stok awal yang sama dan disimpan dari instance model terpisah, sehingga stok bisa terjual melebihi persediaan dan nilai stok akhir salah. Gabungkan qty per `product_id` dulu, atau tolak duplikat. (b) produk nonaktif tetap bisa dijual (`exists:products,id` tanpa cek `is_active`). (c) pesan `$e->getMessage()` dikirim ke klien (7.6) |
 | 3.3 ★ | Generator kode `TRX-XXXX` (4 digit, berurutan) | Sebagian | `KasirController.php:125-127` | Kode = `id order terakhir + 60`, bukan nomor kode terbesar + 1. Bergantung pada id dan isi seeder, melompat kalau ada order terhapus, dan tidak dikunci terhadap 2 kasir yang menyimpan bersamaan (bisa gagal karena kolom unik). Ganti dengan nomor terbesar dari `kode` + 1 di dalam transaksi DB dengan lock |
-| 3.4 | Riwayat transaksi milik kasir sendiri | Sudah | `KasirController@riwayat`; `GET /kasir/riwayat`, `GET /api/kasir/riwayat` | Filter `user_id = Auth::id()`, filter tanggal, cari kode/nama produk. Kurang (kecil): tanpa pagination. API 403 (2.9) |
+| 3.4 | Riwayat transaksi milik kasir sendiri | Sudah | `KasirController@riwayat`; `GET /kasir/riwayat`, `GET /api/kasir/riwayat` | Filter `user_id = Auth::id()`, filter tanggal, cari kode/nama produk. Kurang (kecil): tanpa pagination |
 | 3.5 | Detail transaksi milik sendiri (item, dibayar, kembalian) | Sebagian | `KasirController@riwayat` (`?selected=`), `KasirController@cetakStruk`, `GET /kasir/struk/{order}` | Panel detail di riwayat hanya memilih dari order milik sendiri. **Cacat:** `cetakStruk` tidak mengecek pemilik, jadi kasir mana pun bisa membuka struk transaksi kasir lain lewat `/kasir/struk/{id}`. Belum ada endpoint detail JSON tersendiri |
 
 ## 4. API Dapur
 
 | # | Kebutuhan | Status | File / Endpoint | Yang masih kurang |
 |---|-----------|--------|-----------------|-------------------|
-| 4.1 | Antrian pesanan (status baru/diproses/siap) | Sudah | `DapurController@antrian`; `GET /dapur/antrian`, `GET /api/dapur/antrian` | Tiga daftar terpisah, urut waktu, dengan item. Kunci JSON `baru`/`diproses`/`siap` di luar `data`. API 403 (2.9) |
+| 4.1 | Antrian pesanan (status baru/diproses/siap) | Sudah | `DapurController@antrian`; `GET /dapur/antrian`, `GET /api/dapur/antrian` | Tiga daftar terpisah, urut waktu, dengan item. Kunci JSON `baru`/`diproses`/`siap` di luar `data` |
 | 4.2 | Ubah status pesanan satu arah | Sebagian | `DapurController@updateStatusPesanan`; `POST /dapur/antrian/{order}`, `POST /api/dapur/antrian/{order}` | Status tersimpan dan dicatat di `activity_logs`. **Cacat berat:** tidak ada validasi transisi. Request bisa memundurkan status (`siap` → `baru`), melompat (`baru` → `selesai`), atau menghidupkan lagi order `batal`. Perlu cek bahwa status baru tepat satu langkah setelah status lama, dan order `batal`/`selesai` ditolak. Ini membuat UAT-04 gagal |
 | 4.3 | Catat produksi (tanggal, sesi, daftar produk + jumlah, catatan) | Sudah | `DapurController@storeProduksi`; `POST /dapur/catat-produksi`, `POST /api/dapur/catat-produksi` | Multi-produk, tiap produk 1 movement `produksi` + `sesi` + `keterangan`, `lockForUpdate()`, 1 transaksi DB. Kurang (kecil): produk nonaktif tidak ditolak, `getMessage()` bocor (7.6) |
 | 4.4 | Riwayat produksi milik sendiri | Sebagian | `DapurController@riwayatProduksi`; `GET /dapur/riwayat-produksi` | Filter `jenis = produksi` dan tanggal sudah ada, tetapi **tidak** difilter `user_id = Auth::id()`, jadi tampil produksi semua petugas dapur |
-| 4.5 | Lihat stok + jumlah perlu diproduksi | Sebagian | `DapurController@stok`; `GET /dapur/stok`, `GET /api/dapur/stok` | Blade menampilkan `status_stok` & `perlu_diproduksi` dan ada filter "hanya perlu produksi". Di JSON kedua nilai tidak ikut (belum `$appends`). API 403 (2.9) |
+| 4.5 | Lihat stok + jumlah perlu diproduksi | Sebagian | `DapurController@stok`; `GET /dapur/stok`, `GET /api/dapur/stok` | Blade menampilkan `status_stok` & `perlu_diproduksi` dan ada filter "hanya perlu produksi". Di JSON kedua nilai tidak ikut (belum `$appends`) |
 
 ## 5. API Owner
 
@@ -80,7 +80,7 @@
 | 5.4 | Edit data produk (+ log BR-11) | Sudah | `OwnerController@updateProduk`, `POST /owner/produk/{product}`, `POST /api/owner/produk/{product}` | `data_lama`/`data_baru` di `activity_logs`, dalam transaksi DB. Kurang (kecil): memakai `POST`, bukan `PUT`; `getMessage()` bocor. Bagian stok lihat 5.9 |
 | 5.5 | Hapus/nonaktifkan produk | Sudah | `OwnerController@destroyProduk`, `POST /owner/produk/{product}/delete`, `DELETE /owner/produk/{product}`, `DELETE /api/owner/produk/{product}` | Soft-disable `is_active = false` + log. Kurang (kecil): pesan masih berbunyi "dihapus" |
 | 5.6 ★ | CRUD supplier | Sebagian | `OwnerController@pemasok` & `@storePemasok`, `GET/POST /owner/pemasok`, `GET/POST /api/owner/pemasok` | Baru lihat + tambah. **Edit dan hapus pemasok belum ada** (method, route, dan tombol di `owner/pemasok.blade.php`). `kontak` diwajibkan, padahal di ERD kolomnya nullable. Tambah pemasok belum dicatat di log |
-| 5.7 ★ | CRUD user (nonaktifkan, bukan hapus) | Sebagian | `OwnerController@pengguna`, `@storePengguna`, `@toggleStatusPengguna`; `/owner/pengguna`, `/owner/pengguna/{user}/toggle` | Sudah: lihat, tambah (password di-hash, username unik, log), nonaktif/aktifkan dengan pencegahan menonaktifkan diri sendiri + log. **Edit pengguna (nama, username, peran) belum ada.** Log `ubah_status_pengguna` tidak menyimpan id/username user yang diubah. Hanya route web (tanpa JSON/API). Akun yang dinonaktifkan tetap bisa memakai session yang sedang aktif sampai logout |
+| 5.7 ★ | CRUD user (nonaktifkan, bukan hapus) | Sebagian | `OwnerController@pengguna`, `@storePengguna`, `@toggleStatusPengguna`; `/owner/pengguna`, `/owner/pengguna/{user}/toggle` | Sudah: lihat, tambah (password di-hash, username unik, log), nonaktif/aktifkan dengan pencegahan menonaktifkan diri sendiri + log. **Edit pengguna (nama, username, peran) belum ada.** Log `ubah_status_pengguna` tidak menyimpan id/username user yang diubah. Hanya route web (tanpa JSON/API). Session/token akun yang dinonaktifkan kini langsung ditolak (2.8) |
 | 5.8 | Stok masuk dari supplier | Sudah | `OwnerController@storeStokMasuk`, `POST /owner/stok-masuk`, `POST /api/owner/stok-masuk` | Multi-produk, movement `masuk` + `supplier_id`, `lockForUpdate()`, transaksi DB, log. Kurang (kecil): `getMessage()` bocor |
 | 5.9 | Ubah stok lewat edit produk = `penyesuaian`, keterangan wajib | Sebagian | `OwnerController@updateProduk` | Selisih stok dicatat sebagai movement `penyesuaian` (qty ±, `saldo_setelah`) dalam transaksi DB + log. Kurang: `alasan_koreksi` **tidak wajib** (`nullable`, diisi default "Koreksi stok oleh Owner"); harus `required_if` stok berubah. Produk tidak di-`lockForUpdate()` |
 | 5.10 | Riwayat stok per produk | Sebagian | `OwnerController@riwayatStok`, `GET /owner/produk/{product}/riwayat`, `GET /api/owner/produk/{product}/riwayat` | Sekarang ada route web, tetapi hasilnya tetap JSON (bukan halaman). Tanpa pagination/filter tanggal. Kunci `product`/`movements` di luar `data` |
@@ -89,7 +89,7 @@
 | 5.13 | Laporan penjualan per periode (total, jumlah transaksi, rata-rata, tren harian, produk terlaris, perbandingan periode lalu) | Belum | `OwnerController@laporan`, `GET /owner/laporan`, `GET /api/owner/laporan` | Halaman & endpoint ada, tetapi **semua angka hard-coded** (38.420.000, 1.264 transaksi, tren, 5 produk terlaris, +12,6%). Parameter `periode`/`range` tidak dipakai di query. Perlu agregasi SQL nyata, kecualikan `batal` (7.13) |
 | 5.14 ★ | Backup: riwayat, buat manual, jadwal otomatis, pulihkan | Sebagian | `OwnerController@pencadangan`, `@createBackup`, `@updateBackupSchedule`; `/owner/pencadangan` | Riwayat dari tabel `backups` dan penyimpanan jadwal ke `settings` sudah ada. Kurang: `createBackup` **tidak membuat file** (hanya baris DB dengan `ukuran_kb = 1200` tetap dan status selalu `berhasil`); `updateBackupSchedule` tanpa validasi; jadwal tidak dijalankan scheduler mana pun (7.9); tombol Pulihkan hanya `alert()`, tidak ada restore + log BR-11. Hanya route web |
 | 5.15 ★ | Ekspor laporan ke PDF & Excel | Sebagian | `OwnerController@exportExcel`, `GET /owner/laporan/export-excel`; tombol PDF di `owner/laporan.blade.php:41-51` | Excel: berkas **CSV** berisi semua order sepanjang masa (termasuk `batal`), tanpa filter periode dan tanpa ringkasan total / jumlah transaksi / produk terlaris (UAT-09). PDF: hanya `window.print()` di browser, belum ada file PDF dari server. Belum ada paket `barryvdh/laravel-dompdf` / `phpoffice/phpspreadsheet` |
-| 5.16 | Reset password user | Sebagian | `OwnerController@resetPasswordPengguna`, `POST /owner/pengguna/{user}/reset` | Password di-hash + log. Kurang: tanpa validasi (password kosong → default `password123`), password baru ditampilkan di pesan flash, belum mencabut token lama (tergantung 2.5) |
+| 5.16 | Reset password user | Sebagian | `OwnerController@resetPasswordPengguna`, `POST /owner/pengguna/{user}/reset` | Password di-hash + log. Kurang: tanpa validasi (password kosong → default `password123`), password baru ditampilkan di pesan flash, belum mencabut token Sanctum milik user tersebut (`$user->tokens()->delete()`) |
 | 5.17 ★ | Unduh file backup | Belum | Tombol Unduh di `owner/pencadangan.blade.php:135` | Tombol hanya `alert()`. Belum ada route, method, atau file. Simpan di `storage/app/private`, kirim lewat `response()->download()`, hanya owner |
 | 5.18 ★ | Kirim daftar restock ke pemasok via WhatsApp (baris baru 26 Nov) | Sebagian | `owner/pemasok.blade.php:204-226` (`kirimWhatsApp()`, `salinDaftarPesanan()`) | Tombol ada, tetapi pesan **hard-coded** (Hakau/Lumpia/Bakpao @20 porsi) dan nomor **hard-coded** `6281234567890`. Seharusnya dibangun dari `kebutuhan_stok` (jumlah = 2 × stok_minimum, BR-04) dan nomor `kontak` pemasok yang dipilih (dinormalisasi ke format 62…) |
 
@@ -117,14 +117,14 @@
 | 7.2 | Password & token tersembunyi di JSON | Sudah | `User::$hidden` | — |
 | 7.3 | Validasi **semua** input di server dengan pesan error Bahasa Indonesia | Sebagian | Semua `store*`/`update*` di ketiga controller | Hampir semua aksi tulis sudah `validate()` dengan sebagian pesan Indonesia. Tanpa validasi: `updateBackupSchedule`, `resetPasswordPengguna`, parameter filter `tanggal`. Belum FormRequest. `.env.example` masih `APP_LOCALE=en` dan belum ada `lang/id/validation.php`, jadi pesan bawaan (`exists`, `integer`, `in`) masih bahasa Inggris |
 | 7.4 | Format respons konsisten `{success, message, data}` | Sebagian | Semua controller | Sebagian endpoint sudah `data` (`storeTransaksi`, `storeProduksi`, `storeStokMasuk`, `dashboard`, `laporan`). Lainnya memakai `products`, `orders`, `baru/diproses/siap`, `product`, `movements`, `users`, `backups`, `user`. Error 403/404/500 bawaan Laravel tidak memakai format ini |
-| 7.5 | Error 403 (akses ditolak) konsisten untuk API & web | Sebagian | `errors/akses-ditolak.blade.php`, `abort(403)` | Web: halaman khusus hanya di `/dashboard/{role}`; modul lain memakai halaman 403 bawaan. API: `{"message":"Forbidden"}` bahasa Inggris. Perlu handler di `bootstrap/app.php` → `withExceptions` |
+| 7.5 | Error 403 (akses ditolak) konsisten untuk API & web | Sebagian | `bootstrap/app.php` → `withExceptions`, `EnsureRole`, `errors/akses-ditolak.blade.php` | API sudah seragam: 401/403/404/429 dalam format `{success:false, message, data:null}` Bahasa Indonesia. Web: halaman khusus "Akses Ditolak" masih hanya di `/dashboard/{role}`; akses lintas modul (misal kasir → `/owner/produk`) tetap halaman 403 bawaan Laravel |
 | 7.6 | Pesan error asli / stack trace tidak dikirim ke klien | Belum | Semua blok `catch` di `KasirController`, `DapurController`, `OwnerController`; `.env.example` | Sekarang ada **8 tempat** yang mengirim `$e->getMessage()` ke klien (JSON dan flash web). `.env.example` masih `APP_DEBUG=true`. Perlu pesan umum + `report($e)` |
-| 7.7 | Pembatasan percobaan login (throttle) | Belum | `routes/api.php`, `routes/web.php` | Tambah `throttle:5,1` atau `RateLimiter` pada route login |
-| 7.8 | CORS untuk frontend standalone | Sudah | `config/cors.php` (default `api/*`) | Jika memakai Sanctum mode SPA/cookie, atur `supports_credentials` & `SANCTUM_STATEFUL_DOMAINS` |
+| 7.7 ★ | Pembatasan percobaan login (throttle) | Sudah | `RateLimiter::for('login')` di `AppServiceProvider`; `throttle:login` di `POST /api/login` & `POST /login` | — 5 percobaan/menit per username + IP. API → 429 JSON; web → kembali ke form dengan pesan. Test: `test_login_dibatasi_5_percobaan_per_menit` |
+| 7.8 | CORS untuk frontend standalone | Sudah | `config/cors.php` (default `api/*`) | — API memakai token Bearer (bukan cookie SPA), jadi `supports_credentials` & `SANCTUM_STATEFUL_DOMAINS` tidak perlu diubah |
 | 7.9 ★ | Backup otomatis harian (default 02:00) + manual, dan bisa dipulihkan | Belum | `routes/console.php` (hanya `inspire`), `OwnerController@createBackup` | Tidak ada artisan command backup, tidak ada `Schedule::command(...)->dailyAt(...)` yang membaca `settings`, tidak ada file yang benar-benar dibuat (5.14), dan tidak ada restore (SQLite: salin file; MySQL: dump/impor) |
-| 7.10 | Dependensi terpasang & bisa dijalankan | Sebagian | `composer.json`, `.env` | `composer install`, `migrate:fresh --seed`, dan `php artisan test` berjalan. Kurang: Sanctum (2.5) dan paket ekspor PDF/Excel (5.15) |
-| 7.11 ★ | Autentikasi token (Sanctum) + middleware peran di server | Belum | `composer.json`, `bootstrap/app.php`, `routes/api.php` | Sama dengan 2.5, 2.8, 2.9 |
-| 7.12 | Tidak ada endpoint publik yang menampilkan password atau data akun | Belum | `GET /api/demo-accounts` (`routes/api.php:15-23`) | Masih ada: tanpa auth, mengembalikan username + password + nama. Data juga sudah tidak cocok dengan seeder (nama "Madam Owner", "Siti Kasir"). Hapus, atau aktifkan hanya saat `APP_ENV=local` |
+| 7.10 | Dependensi terpasang & bisa dijalankan | Sebagian | `composer.json`, `.env` | `composer install`, `migrate`, `migrate:fresh --seed`, `php artisan test` berjalan; Sanctum sudah masuk dependensi. Kurang: paket ekspor PDF/Excel (5.15). Setelah `git pull`, anggota tim perlu `composer install` + `php artisan migrate` |
+| 7.11 ★ | Autentikasi token (Sanctum) + middleware peran di server | Sudah | `composer.json`, `bootstrap/app.php`, `routes/api.php`, `routes/web.php` | — Lihat 2.5, 2.8, 2.9 |
+| 7.12 ★ | Tidak ada endpoint publik yang menampilkan password atau data akun | Sudah | `routes/api.php` (`/api/demo-accounts`) | — Route hanya didaftarkan saat `APP_ENV=local` (di `testing`/`production` → 404). Isinya dibaca dari akun aktif di DB (nama, username, peran) **tanpa password**. Test: `test_demo_accounts_tidak_tersedia_di_luar_lingkungan_local` |
 | 7.13 | Laporan 1 bulan tampil < 5 detik | Belum | `OwnerController@laporan` | Laporan masih hard-coded (5.13), jadi belum bisa diukur. Gunakan agregasi SQL + index `orders(waktu, status)` |
 
 ## 8. Pengujian (skenario UAT & test lintas peran)
@@ -133,76 +133,76 @@
 
 | # | Kebutuhan | Status | File / Endpoint | Yang masih kurang |
 |---|-----------|--------|-----------------|-------------------|
-| 8.1 | Test login (sukses, peran salah, password salah, web redirect, halaman login, akun nonaktif) | Sudah | `tests/Feature/AuthTest.php` (7 test) | Lulus (26 Nov). Saat 2.11 diperbaiki, assertion 422/401 harus diganti ke pesan umum |
+| 8.1 | Test login (sukses, peran salah, password salah, web redirect, halaman login, akun nonaktif) | Sudah | `tests/Feature/AuthTest.php` (7 test) | — Disesuaikan 26 Nov: login API mengecek `data.token`; peran salah & password salah sama-sama 401 + pesan umum |
 | 8.2 | Test halaman Owner (dashboard, produk, tambah/edit/hapus produk, stok masuk, pemasok, laporan, ekspor) | Sudah | `tests/Feature/OwnerTest.php` (6 test), `OwnerExtendedTest.php` (6 test) | Lulus (26 Nov). Hanya route web. Test dashboard & laporan hanya mengecek teks Blade, sehingga angka hard-coded (5.1, 5.13) tidak terdeteksi. Belum ada test untuk riwayat transaksi, pengguna, pencadangan |
-| 8.3 ★ | Test API (JSON + token) untuk ketiga peran | Belum | — | Tidak ada satu pun test `/api/*`. Test ini akan langsung menunjukkan bahwa semua API selalu 403 (2.9) |
+| 8.3 ★ | Test API (JSON + token) untuk ketiga peran | Sebagian | `tests/Feature/ApiSecurityTest.php` (19 test) | Sudah: login token, pesan login umum, akses tiap grup dengan token asli, tamu 401, logout, token akun nonaktif, throttle, demo-accounts. Kurang: test fungsi endpoint lewat API (misal `POST /api/kasir/transaksi`, `POST /api/dapur/catat-produksi`, `POST /api/owner/stok-masuk`) dan isi JSON-nya |
 | 8.4 | Test alur kasir: simpan transaksi → stok berkurang, kembalian, harga snapshot, stok/uang kurang ditolak, kode TRX berurutan | Sebagian | `tests/Feature/KasirTest.php` (8 test) | Sudah: stok berkurang + movement `terjual`, stok kurang ditolak, uang kurang ditolak, riwayat, struk. Kurang: harga snapshot (ubah harga setelah transaksi), kode TRX berurutan, item ganda (3.2), struk milik kasir lain (3.5) |
 | 8.5 | Test alur dapur: transisi status valid/invalid, produksi menambah stok + sesi | Sebagian | `tests/Feature/DapurTest.php` (7 test) | Sudah: transisi maju, produksi + sesi, stok, riwayat. Kurang: transisi mundur/lompat **ditolak** (akan gagal karena 4.2), riwayat produksi hanya milik sendiri (4.4) |
 | 8.6 ★ | Test pembatalan transaksi: stok kembali, alasan wajib, log tercatat | Belum | — | Fitur ada (5.12), test belum |
-| 8.7 ★ | Matriks lintas peran (kasir→dapur/owner, dapur→kasir/owner, tamu→semua) harus 401/403 | Sebagian | `AuthTest::test_cross_role_access…`, `OwnerTest::test_non_owner_forbidden…`, `KasirTest::test_non_kasir…`, `DapurTest::test_non_dapur…` | Web sudah mencakup ketiga modul untuk peran lain. Belum untuk API dan belum untuk tamu (tanpa login → redirect/401) |
+| 8.7 ★ | Matriks lintas peran (kasir→dapur/owner, dapur→kasir/owner, tamu→semua) harus 401/403 | Sudah | `ApiSecurityTest::test_matriks_akses_api_lintas_peran` (9 kombinasi), `test_tamu_tanpa_token_mendapat_401_json_bukan_redirect`; web: `AuthTest`, `OwnerTest`, `KasirTest`, `DapurTest` | — API: 3 peran × 3 grup (200 untuk peran sendiri, 403 lainnya) + tamu 401. Web: tiap modul menolak peran lain |
 | 8.8 | Test unit BR-03/BR-04 (accessor status & perlu diproduksi) | Belum | `tests/Unit/` (hanya ExampleTest) | `DapurTest` sekilas mengecek `status_stok = Aman`, tetapi uji batas (stok 0, minimum−1, minimum) belum ada |
 | 8.9 ★ | Test backup & pulihkan | Belum | — | Fitur backup riil belum ada (5.14, 7.9) |
 | 8.10 | Data seeder cocok dengan angka di skenario UAT | Sudah | `database/seeders/DatabaseSeeder.php` | — (lihat 1.12–1.13) |
 
 ### 8b. Skenario UAT (wajib lulus)
 
-Penilaian: **Sudah** = fitur jalan dan ada test yang memakai angka skenario. **Sebagian** = fitur jalan di web, tetapi test belum ada atau memakai angka lain, atau ada cacat. Semua UAT saat ini hanya bisa dijalankan lewat web, karena API selalu 403 (2.9).
+Penilaian: **Sudah** = fitur jalan dan ada test yang memakai angka skenario. **Sebagian** = fitur jalan di web, tetapi test belum ada atau memakai angka lain, atau ada cacat. API sudah bisa dipakai dengan token (2.9), tetapi selain UAT-03 semua test UAT masih memakai route web.
 
 | # | Skenario | Status | File / Endpoint | Yang masih kurang |
 |---|----------|--------|-----------------|-------------------|
 | UAT-01 ★ | Kasir: Siomay Ayam ×2, Hakau Udang ×1, Bakpao Coklat ×3, bayar 100.000 → total 84.000, kembalian 16.000, stok berkurang, status `baru` | Sebagian | `KasirController@storeTransaksi`; `KasirTest::test_kasir_can_process_transaction…` | Fitur jalan di web. Test hanya Siomay ×2 bayar 50.000; belum ada test 3 produk dengan total 84.000 / kembalian 16.000 |
 | UAT-02 ★ | Kasir: pesan Hakau Udang 5 saat stok 4 → ditolak | Sebagian | `KasirTest::test_kasir_cannot_process_transaction_if_stock_insufficient` | Fitur jalan. Test memakai qty 10 (bukan 5) dan belum mengecek bahwa tidak ada order tersimpan |
-| UAT-03 ★ | Kasir memanggil API owner → 403 | Belum | `/api/owner/*` | Kasir memang menerima 403, tetapi **owner juga menerima 403**, karena API tanpa auth (2.9). Skenario baru bermakna setelah Sanctum + middleware peran. Belum ada test API |
+| UAT-03 ★ | Kasir memanggil API owner → 403 | Sudah | `/api/owner/*` (`auth:sanctum` + `role:owner`); `ApiSecurityTest::test_uat_03_kasir_memanggil_api_owner_ditolak_403` | — Token kasir hasil login ke `GET /api/owner/dashboard`, `GET /api/owner/produk`, dan `POST /api/owner/produk` → 403 JSON, dan produk tidak tersimpan. Token owner ke endpoint yang sama → 200 (matriks 8.7) |
 | UAT-04 ★ | Dapur: `baru → diproses → siap → selesai`; status mundur ditolak | Sebagian | `DapurTest::test_dapur_can_update_status_pesanan` | Jalur maju jalan & dites. Status mundur **diterima** (4.2), jadi bagian kedua gagal. Perlu perbaikan + test |
-| UAT-05 ★ | Dapur: produksi sore Hakau Udang +20 → stok 4 jadi 24, jenis `produksi` | Sudah | `DapurTest::test_dapur_can_store_produksi_and_update_stock` | — Test memakai angka persis (sore, Hakau 4 → 24, jenis `produksi`) dan lulus. Versi API belum (2.9) |
+| UAT-05 ★ | Dapur: produksi sore Hakau Udang +20 → stok 4 jadi 24, jenis `produksi` | Sudah | `DapurTest::test_dapur_can_store_produksi_and_update_stock` | — Test memakai angka persis (sore, Hakau 4 → 24, jenis `produksi`) dan lulus. Versi API belum dites |
 | UAT-06 ★ | Owner: tambah produk stok awal 48, minimum 10 → Aman, tercatat `stok_awal` 48 | Sebagian | `OwnerTest::test_owner_can_store_new_product_with_initial_stock_movement` | Fitur jalan. Test memakai angka 30 (bukan 48) dan tanpa cek status "Aman" |
 | UAT-07 ★ | Owner: stok masuk Pemasok A, Bakpao Coklat +24 → stok 6 jadi 30, jenis `masuk` | Sebagian | `OwnerExtendedTest::test_owner_can_store_stok_masuk_and_update_inventory` | Fitur jalan. Test memakai produk stok 4 +20 → 24, bukan Bakpao 6 +24 → 30 |
 | UAT-08 ★ | Owner: cari transaksi per tanggal → detail item, dibayar, kembalian tampil | Sebagian | `OwnerController@riwayatTransaksi`, `GET /owner/riwayat-transaksi?tanggal=…` | Fitur jalan di web (filter tanggal + panel detail). Belum ada test |
 | UAT-09 ★ | Owner: ekspor laporan November ke Excel → berisi total, jumlah transaksi, produk terlaris | Belum | `OwnerController@exportExcel` | Berkas CSV ada, tetapi tanpa filter periode dan **tanpa** total, jumlah transaksi, atau produk terlaris. Laporan sumbernya juga hard-coded (5.13). Test hanya mengecek header `text/csv` |
-| UAT-10 ★ | Owner menonaktifkan akun Dani → Dani tidak bisa login, transaksinya tetap ada | Sebagian | `OwnerController@toggleStatusPengguna`; `AuthTest::test_deactivated_user_cannot_login_uat_10` | Tombol nonaktifkan sudah ada di web dan login ditolak. Test membuat user nonaktif langsung di DB (tidak lewat `toggle`) dan belum mengecek bahwa transaksi Dani tetap ada |
+| UAT-10 ★ | Owner menonaktifkan akun Dani → Dani tidak bisa login, transaksinya tetap ada | Sebagian | `OwnerController@toggleStatusPengguna`, `EnsureRole`; `AuthTest::test_deactivated_user_cannot_login_uat_10`, `ApiSecurityTest::test_token_akun_yang_dinonaktifkan_langsung_ditolak`, `test_session_web_akun_nonaktif_dikeluarkan` | Login ditolak, token lama langsung dicabut, session web dikeluarkan (semuanya dites). Kurang: test yang menonaktifkan lewat `toggle` oleh owner dan mengecek bahwa transaksi Dani tetap ada |
 
 ---
 
 ## Ringkasan
 
-Cara hitung: Sudah = 1, Sebagian = 0,5, Belum = 0. Bagian 5 bertambah 1 baris (5.18 WhatsApp), jadi total baris sekarang 98.
+Cara hitung: Sudah = 1, Sebagian = 0,5, Belum = 0. Total 98 baris (termasuk 5.18 WhatsApp).
 
-| Bagian | Baris | Sudah | Sebagian | Belum | Progres | 24 Nov |
-|--------|------:|------:|---------:|------:|--------:|-------:|
-| 1. Database | 15 | 13 | 1 | 1 | 90% | 90% |
-| 2. Login & hak akses | 11 | 5 | 3 | 3 | 59% | 55% |
-| 3. API Kasir | 5 | 1 | 4 | 0 | 60% | 0% |
-| 4. API Dapur | 5 | 2 | 3 | 0 | 70% | 0% |
-| 5. API Owner | 18 | 3 | 13 | 2 | 53% | 12% |
-| 6. Aturan bisnis | 11 | 5 | 6 | 0 | 73% | 27% |
-| 7. Non-fungsional | 13 | 3 | 4 | 6 | 38% | 38% |
-| 8. Pengujian (8a + UAT) | 20 | 4 | 10 | 6 | 45% | 23% |
-| **Total** | **98** | **36** | **44** | **18** | **≈ 59%** | ≈ 35% |
+| Bagian | Baris | Sudah | Sebagian | Belum | Progres | Audit 26 Nov | 24 Nov |
+|--------|------:|------:|---------:|------:|--------:|-------------:|-------:|
+| 1. Database | 15 | 13 | 1 | 1 | 90% | 90% | 90% |
+| 2. Login & hak akses | 11 | 11 | 0 | 0 | 100% | 59% | 55% |
+| 3. API Kasir | 5 | 1 | 4 | 0 | 60% | 60% | 0% |
+| 4. API Dapur | 5 | 2 | 3 | 0 | 70% | 70% | 0% |
+| 5. API Owner | 18 | 3 | 13 | 2 | 53% | 53% | 12% |
+| 6. Aturan bisnis | 11 | 5 | 6 | 0 | 73% | 73% | 27% |
+| 7. Non-fungsional | 13 | 6 | 4 | 3 | 62% | 38% | 38% |
+| 8. Pengujian (8a + UAT) | 20 | 6 | 10 | 4 | 55% | 45% | 23% |
+| **Total** | **98** | **47** | **41** | **10** | **≈ 69%** | ≈ 59% | ≈ 35% |
 
-UAT saja: **1 dari 10 lulus penuh** (UAT-05), 7 sebagian, 2 belum (UAT-03, UAT-09).
+UAT saja: **2 dari 10 lulus penuh** (UAT-03, UAT-05), 7 sebagian, 1 belum (UAT-09).
 
 ### Tugas Fatih (baris ★)
 
-| Kelompok | Baris | Status |
-|----------|-------|--------|
-| Keamanan API (Sanctum, middleware peran) | 2.5, 2.6, 2.7, 2.8, 2.9, 7.11, 8.3, 8.7 | 0 Sudah · 4 Sebagian · 4 Belum |
+| Kelompok | Baris | Sudah · Sebagian · Belum |
+|----------|-------|--------------------------|
+| Keamanan API (Sanctum, middleware peran, login, throttle, demo-accounts) | 2.5, 2.6, 2.7, 2.8, 2.9, 2.11, 7.7, 7.11, 7.12, 8.3, 8.7 | 10 · 1 · 0 |
 | Backup riil + scheduler | 5.14, 5.17, 7.9, 8.9 | 0 · 1 · 3 |
 | Edit pemasok / pengguna | 5.6, 5.7 | 0 · 2 · 0 |
 | WhatsApp stok | 5.18 | 0 · 1 · 0 |
 | Batal transaksi | 5.12, BR-06 (bagian batal), 8.6 | 0 · 2 · 1 |
 | Ekspor PDF | 5.15 | 0 · 1 · 0 |
 | Generator kode TRX | 3.3, BR-07 | 0 · 2 · 0 |
-| Test UAT-01 s.d. UAT-10 | UAT-01 … UAT-10 | 1 · 7 · 2 |
-| **Jumlah** | **31 baris** | **1 Sudah · 20 Sebagian · 10 Belum ≈ 35%** |
+| Test UAT-01 s.d. UAT-10 | UAT-01 … UAT-10 | 2 · 7 · 1 |
+| **Jumlah** | **34 baris** | **12 Sudah · 17 Sebagian · 5 Belum ≈ 60%** |
 
-Baris yang dekat dengan "keamanan API" tetapi **tidak** ditandai ★ karena tidak disebut: 2.11 (pesan login umum), 7.6 (kebocoran `getMessage()`), 7.7 (throttle login), 7.12 (`/api/demo-accounts`). Perlu disepakati siapa yang mengerjakan.
+2.11, 7.7, dan 7.12 kini ditandai ★ karena dikerjakan bersama keamanan API (26 Nov). Baris keamanan yang masih tanpa pemilik: **7.6** (8 blok `catch` mengirim `$e->getMessage()` ke klien, `APP_DEBUG=true` di `.env.example`).
 
-Kesimpulan: sejak 24 November, fitur ketiga peran sudah dibangun dan **berjalan lewat halaman web**. Progres naik dari ≈ 35% ke ≈ 59%. Celah terbesar sekarang: (1) **API belum bisa dipakai siapa pun** (tanpa Sanctum dan tanpa middleware auth, semua 403), (2) **status pesanan dapur bisa mundur** (UAT-04 gagal), (3) **laporan dan sebagian dashboard masih angka hard-coded** (UAT-09 gagal), (4) backup hanya baris palsu tanpa file, dan (5) beberapa cacat data: item ganda di keranjang, struk kasir lain bisa dibuka, kode TRX dari `id + 60`.
+Kesimpulan: fitur ketiga peran berjalan lewat web, dan sejak 26 November **API juga bisa dipakai** dengan token Sanctum dan dibatasi per peran. Progres ≈ 69%. Celah terbesar sekarang: (1) **status pesanan dapur bisa mundur** (UAT-04 gagal), (2) **laporan dan sebagian dashboard masih angka hard-coded** (UAT-09 gagal), (3) backup hanya baris palsu tanpa file, (4) beberapa cacat data: item ganda di keranjang, struk kasir lain bisa dibuka, kode TRX dari `id + 60`, dan (5) pesan error asli masih bocor ke klien (7.6).
 
 ## 5 pekerjaan prioritas berikutnya
 
-1. **★ Auth API.** Pasang `laravel/sanctum` (`php artisan install:api`), `HasApiTokens`, login API mengembalikan token, logout mencabut token. Buat middleware `role:{peran}` di `bootstrap/app.php`, bungkus `/api/kasir|dapur|owner` dengan `auth:sanctum` + `role`, lalu ganti `check*Access()` manual. Tambah test API + matriks lintas peran (8.3, 8.7, UAT-03). *(2.5–2.9, 7.11)*
-2. **★ Kode TRX + batal transaksi.** Kode = nomor terbesar + 1 dengan lock (3.3, BR-07). Batal: `lockForUpdate()`, `data_lama` status asli, respons JSON + route API, test 8.6. *(5.12, BR-06)*
-3. **★ Backup riil + scheduler.** Artisan command `backup:run` yang menyalin DB ke `storage/app/private/backups`, mengisi `ukuran_kb`/`status` sebenarnya; `Schedule` membaca `backup_frekuensi`/`backup_jam`; route unduh & pulihkan (+ log BR-11); test 8.9. *(5.14, 5.17, 7.9)*
-4. **★ Fitur Owner yang kurang.** Edit/hapus pemasok, edit pengguna (+ log), WhatsApp dari data restock nyata + nomor pemasok, ekspor PDF dari server. *(5.6, 5.7, 5.18, 5.15)*
-5. **★ Test UAT-01 s.d. UAT-10 dengan angka persis skenario**, lalu laporkan ke tim cacat di luar tugas ★ yang membuat UAT gagal: transisi status dapur (4.2, UAT-04), laporan & ekspor Excel hard-coded (5.13, 5.15, UAT-09), item ganda di keranjang (3.2), dan struk kasir lain (3.5).
+1. **★ Kode TRX + batal transaksi.** Kode = nomor terbesar + 1 dengan lock (3.3, BR-07). Batal: `lockForUpdate()`, `data_lama` status asli, respons JSON + route API `role:owner`, test 8.6. *(5.12, BR-06)*
+2. **★ Backup riil + scheduler.** Artisan command `backup:run` yang menyalin DB ke `storage/app/private/backups`, mengisi `ukuran_kb`/`status` sebenarnya; `Schedule` membaca `backup_frekuensi`/`backup_jam`; route unduh & pulihkan (+ log BR-11); test 8.9. *(5.14, 5.17, 7.9)*
+3. **★ Fitur Owner yang kurang.** Edit/hapus pemasok, edit pengguna (+ log, cabut token saat peran diubah), WhatsApp dari data restock nyata + nomor pemasok, ekspor PDF dari server. *(5.6, 5.7, 5.18, 5.15)*
+4. **★ Test UAT-01 s.d. UAT-10 dengan angka persis skenario**, sebaiknya lewat API dengan token (sekaligus melengkapi 8.3), lalu laporkan ke tim cacat di luar tugas ★ yang membuat UAT gagal: transisi status dapur (4.2, UAT-04), laporan & ekspor Excel hard-coded (5.13, 5.15, UAT-09), item ganda di keranjang (3.2), dan struk kasir lain (3.5).
+5. **Sepakati pemilik 7.6** (pesan error umum + `report($e)` di semua `catch`, `APP_DEBUG=false` untuk demo), dan minta tim menjalankan `composer install` + `php artisan migrate` setelah pull.

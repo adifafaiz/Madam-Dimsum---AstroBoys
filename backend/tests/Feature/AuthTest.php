@@ -50,11 +50,15 @@ class AuthTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'user' => [
-                'username' => 'agus',
-                'role' => 'dapur',
+            'data' => [
+                'token_type' => 'Bearer',
+                'user' => [
+                    'username' => 'agus',
+                    'role' => 'dapur',
+                ],
             ],
         ]);
+        $this->assertNotEmpty($response->json('data.token'));
     }
 
     public function test_login_fails_when_role_mismatches(): void
@@ -65,9 +69,12 @@ class AuthTest extends TestCase
             'role' => 'kasir',
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJson([
+        // Peran salah memakai pesan & kode yang sama dengan password salah (tidak membocorkan peran)
+        $response->assertStatus(401);
+        $response->assertExactJson([
             'success' => false,
+            'message' => 'Username atau password salah.',
+            'data' => null,
         ]);
     }
 
@@ -80,8 +87,10 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(401);
-        $response->assertJson([
+        $response->assertExactJson([
             'success' => false,
+            'message' => 'Username atau password salah.',
+            'data' => null,
         ]);
     }
 

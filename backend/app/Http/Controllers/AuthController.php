@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -41,98 +42,85 @@ class AuthController extends Controller
         $username     = trim($validated['username']);
         $password     = $validated['password'];
         $remember     = $request->boolean('remember');
+        $isApi        = $request->wantsJson() || $request->is('api/*');
 
-        // Cari user di database
         $user = User::where('username', $username)->first();
 
-        if (!$user) {
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Username "' . $username . '" tidak ditemukan.',
-                ], 404);
-            }
+        // Username tidak ada, password salah, atau peran tidak cocok -> satu pesan & satu kode
+        // yang sama, supaya keberadaan username maupun peran akun tidak bocor.
+        if (! $user
+            || ! Hash::check($password, $user->password)
+            || strtolower($user->role) !== $selectedRole) {
+            return $this->loginGagal($request, $isApi, 'Username atau password salah.', 401);
+        }
 
-            return back()->withInput()->withErrors([
-                'username' => 'Username "' . $username . '" tidak ditemukan.',
+        // Status aktif baru dicek setelah password terbukti benar (BR-10, FR-29, UAT-10),
+        // sehingga pesan ini hanya terlihat oleh pemilik akun.
+        if (! $user->is_active) {
+            return $this->loginGagal($request, $isApi, 'Akun Anda telah dinonaktifkan. Silakan hubungi Owner.', 403);
+        }
+
+        $role = strtolower($user->role);
+        $redirectUrl = route('dashboard', ['role' => $role]);
+        $userData = [
+            'id'       => $user->id,
+            'name'     => $user->name,
+            'username' => $user->username,
+            'role'     => $user->role,
+        ];
+
+        // API (frontend standalone): kembalikan token Sanctum, tanpa session
+        if ($request->is('api/*')) {
+            $token = $user->createToken('api-login', [$role])->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login berhasil! Selamat datang, ' . $user->name,
+                'data'    => [
+                    'token'        => $token,
+                    'token_type'   => 'Bearer',
+                    'user'         => $userData,
+                    'redirect_url' => $redirectUrl,
+                ],
             ]);
         }
 
-        // Cek status keaktifan akun (BR-10, FR-29, UAT-10)
-        if (!$user->is_active) {
-            $msg = 'Akun Anda telah dinonaktifkan. Silakan hubungi Owner.';
-
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $msg,
-                ], 403);
-            }
-
-            return back()->withInput()->withErrors([
-                'username' => $msg,
-            ]);
-        }
-
-        // Cek kecocokan role akun dengan role yang dipilih di tampilan login
-        if (strtolower($user->role) !== $selectedRole) {
-            $userRoleLabel = ucfirst($user->role);
-            $selectedRoleLabel = ucfirst($selectedRole);
-            $msg = "Akun ini terdaftar sebagai peran {$userRoleLabel}, bukan {$selectedRoleLabel}. Silakan klik tombol '{$userRoleLabel}' untuk masuk.";
-
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $msg,
-                ], 422);
-            }
-
-            return back()->withInput()->withErrors([
-                'role' => $msg,
-            ]);
-        }
-
-        // Verifikasi password
-        if (!Hash::check($password, $user->password)) {
-            $msg = 'Password yang dimasukkan salah.';
-
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $msg,
-                ], 401);
-            }
-
-            return back()->withInput()->withErrors([
-                'password' => $msg,
-            ]);
-        }
-
-        // Login ke session jika sesi tersedia (web session)
+        // Web (Blade): login ke session
         Auth::login($user, $remember);
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }
 
-        $role = strtolower($user->role);
-        $redirectUrl = route('dashboard', ['role' => $role]);
-
-        if ($request->wantsJson() || $request->is('api/*')) {
+        if ($isApi) {
             return response()->json([
                 'success' => true,
                 'message' => 'Login berhasil! Selamat datang, ' . $user->name,
-                'redirect_url' => $redirectUrl,
-                'user' => [
-                    'id'       => $user->id,
-                    'name'     => $user->name,
-                    'username' => $user->username,
-                    'role'     => $user->role,
-                    'email'    => $user->email,
+                'data'    => [
+                    'user'         => $userData,
+                    'redirect_url' => $redirectUrl,
                 ],
             ]);
         }
 
         return redirect()->intended($redirectUrl)->with('success', 'Selamat datang, ' . $user->name . '!');
+    }
+
+    /**
+     * Respons login gagal (JSON untuk API, kembali ke form untuk web).
+     */
+    private function loginGagal(Request $request, bool $isApi, string $msg, int $status)
+    {
+        if ($isApi) {
+            return response()->json([
+                'success' => false,
+                'message' => $msg,
+                'data'    => null,
+            ], $status);
+        }
+
+        return back()->withInput($request->only('username', 'role'))->withErrors([
+            'username' => $msg,
+        ]);
     }
 
     /**
@@ -161,16 +149,31 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        Auth::logout();
+        // API: cabut token Sanctum yang sedang dipakai
+        if ($request->is('api/*')) {
+            $token = $request->user()?->currentAccessToken();
+            if ($token instanceof PersonalAccessToken) {
+                $token->delete();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berhasil logout.',
+                'data'    => null,
+            ]);
+        }
+
+        Auth::guard('web')->logout();
         if ($request->hasSession()) {
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }
 
-        if ($request->wantsJson() || $request->is('api/*')) {
+        if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Berhasil logout.',
+                'data'    => null,
             ]);
         }
 

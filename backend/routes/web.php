@@ -11,11 +11,11 @@ Route::get('/', function () {
 });
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Halaman Khusus Owner (Mockup Frame 1 s.d. 9)
-Route::middleware('auth')->prefix('owner')->group(function () {
+Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/dashboard', [OwnerController::class, 'dashboard'])->name('owner.dashboard');
     Route::get('/produk', [OwnerController::class, 'produk'])->name('owner.produk');
     Route::post('/produk', [OwnerController::class, 'storeProduk'])->name('owner.produk.store');
@@ -53,7 +53,7 @@ Route::middleware('auth')->prefix('owner')->group(function () {
 });
 
 // Halaman Khusus Dapur (Mockup Dapur Frame 1 s.d. 4)
-Route::middleware('auth')->prefix('dapur')->group(function () {
+Route::middleware(['auth', 'role:dapur'])->prefix('dapur')->group(function () {
     // Frame 1: Antrian Pesanan
     Route::get('/antrian', [DapurController::class, 'antrian'])->name('dapur.antrian');
     Route::post('/antrian/{order}', [DapurController::class, 'updateStatusPesanan'])->name('dapur.antrian.update');
@@ -70,7 +70,7 @@ Route::middleware('auth')->prefix('dapur')->group(function () {
 });
 
 // Halaman Khusus Kasir (Mockup Kasir Frame 1 s.d. 4)
-Route::middleware('auth')->prefix('kasir')->group(function () {
+Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->group(function () {
     // Frame 1 & 2: Pencatatan Transaksi & Modal Sukses
     Route::get('/transaksi', [KasirController::class, 'transaksi'])->name('kasir.transaksi');
     Route::post('/transaksi', [KasirController::class, 'storeTransaksi'])->name('kasir.transaksi.store');
