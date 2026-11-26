@@ -69,17 +69,29 @@
                             </td>
                             <td class="text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1">
-                                    <button type="button" onclick="openModalReset('{{ $u->id }}', '{{ $u->name }}')" class="btn btn-ghost btn-sm">
-                                        <i data-lucide="key-round" class="!w-4 !h-4"></i> {{ $u->role === 'owner' ? 'Reset Password' : 'Reset' }}
+                                    <button type="button" class="btn btn-ghost btn-sm"
+                                            onclick="openModalEdit(this)"
+                                            data-url="{{ route('owner.pengguna.update', $u) }}"
+                                            data-id="{{ $u->id }}"
+                                            data-name="{{ $u->name }}"
+                                            data-username="{{ $u->username }}"
+                                            data-role="{{ $u->role }}"
+                                            data-self="{{ $u->id === Auth::id() ? '1' : '0' }}">
+                                        <i data-lucide="pencil" class="!w-4 !h-4"></i> Edit
                                     </button>
-                                    @if($u->role !== 'owner')
-                                        <form action="{{ route('owner.pengguna.toggle', $u->id) }}" method="POST" class="inline">
+                                    <button type="button" class="btn btn-ghost btn-sm"
+                                            onclick="openModalReset(this)"
+                                            data-url="{{ route('owner.pengguna.reset', $u) }}"
+                                            data-id="{{ $u->id }}"
+                                            data-name="{{ $u->name }}">
+                                        <i data-lucide="key-round" class="!w-4 !h-4"></i> Reset Password
+                                    </button>
+                                    @if($u->id !== Auth::id())
+                                        <form action="{{ route('owner.pengguna.toggle', $u->id) }}" method="POST" class="inline"
+                                              onsubmit="return confirm(this.dataset.pesan)"
+                                              data-pesan="{{ $u->is_active ? 'Nonaktifkan akun ' . $u->name . '? Ia tidak bisa masuk lagi, tetapi riwayat transaksinya tetap tersimpan.' : 'Aktifkan kembali akun ' . $u->name . '?' }}">
                                             @csrf
-                                            <button
-                                                type="submit"
-                                                onclick="return confirm('Apakah Anda yakin ingin {{ $u->is_active ? 'menonaktifkan (UAT-10)' : 'mengaktifkan kembali' }} akun {{ $u->name }}?')"
-                                                class="btn btn-sm {{ $u->is_active ? 'btn-danger' : 'btn-secondary !text-[#2E7D4F]' }}"
-                                            >
+                                            <button type="submit" class="btn btn-sm {{ $u->is_active ? 'btn-danger' : 'btn-secondary !text-[#2E7D4F]' }}">
                                                 <i data-lucide="{{ $u->is_active ? 'user-x' : 'user-check' }}" class="!w-4 !h-4"></i>
                                                 {{ $u->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                             </button>
@@ -142,26 +154,31 @@
 
         <form action="{{ route('owner.pengguna.store') }}" method="POST">
             @csrf
+            <input type="hidden" name="_form" value="tambah">
             <div class="modal-isi space-y-4">
                 <div>
                     <label for="name" class="label">Nama lengkap</label>
-                    <input type="text" name="name" id="name" placeholder="misal: Siti Kasir" required class="field">
+                    <input type="text" name="name" id="name" value="{{ old('_form') === 'tambah' ? old('name') : '' }}" placeholder="misal: Siti Kasir" required maxlength="100" class="field">
                 </div>
                 <div>
                     <label for="username" class="label">Username</label>
-                    <input type="text" name="username" id="username" placeholder="misal: siti" required class="field" autocomplete="off">
-                    <p class="bantuan">Harus unik, dipakai untuk masuk.</p>
+                    <input type="text" name="username" id="username" value="{{ old('_form') === 'tambah' ? old('username') : '' }}" placeholder="misal: siti" required minlength="3" maxlength="50" pattern="[A-Za-z0-9._\-]+" class="field" autocomplete="off">
+                    <p class="bantuan">Harus unik, tanpa spasi. Dipakai untuk masuk.</p>
                 </div>
                 <div>
                     <label for="password" class="label">Kata sandi awal</label>
-                    <input type="password" name="password" id="password" value="password123" required class="field" autocomplete="new-password">
+                    <div class="flex gap-2">
+                        <input type="text" name="password" id="password" required minlength="6" maxlength="72" class="field font-semibold" autocomplete="new-password" placeholder="minimal 6 karakter">
+                        <button type="button" onclick="isiPasswordAcak('password')" class="btn btn-secondary shrink-0" title="Buat password acak"><i data-lucide="dices" class="!w-4 !h-4"></i> Acak</button>
+                    </div>
+                    <p class="bantuan">Catat dan sampaikan langsung ke pemilik akun.</p>
                 </div>
                 <div>
                     <label for="role" class="label">Peran</label>
                     <select name="role" id="role" required class="field">
-                        <option value="kasir">Kasir</option>
-                        <option value="dapur">Dapur</option>
-                        <option value="owner">Owner</option>
+                        @foreach(['kasir' => 'Kasir', 'dapur' => 'Dapur', 'owner' => 'Owner'] as $kode => $label)
+                            <option value="{{ $kode }}" {{ old('_form') === 'tambah' && old('role') === $kode ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -181,13 +198,19 @@
             <button type="button" onclick="closeModalReset()" class="btn btn-ghost btn-sm" aria-label="Tutup"><i data-lucide="x"></i></button>
         </div>
 
-        <form id="formResetPass" method="POST">
+        <form id="formResetPass" method="POST" action="{{ old('_form') === 'reset' && old('_user_id') ? route('owner.pengguna.reset', old('_user_id')) : '' }}">
             @csrf
+            <input type="hidden" name="_form" value="reset">
+            <input type="hidden" name="_user_id" id="resetUserId" value="{{ old('_form') === 'reset' ? old('_user_id') : '' }}">
             <div class="modal-isi space-y-4">
                 <p>Atur kata sandi baru untuk <b id="resetUserName"></b>.</p>
                 <div>
                     <label for="new_password" class="label">Password baru</label>
-                    <input type="text" name="password" id="new_password" value="password123" required class="field font-semibold" autocomplete="off">
+                    <div class="flex gap-2">
+                        <input type="text" name="password" id="new_password" required minlength="6" maxlength="72" class="field font-semibold" autocomplete="off" placeholder="minimal 6 karakter">
+                        <button type="button" onclick="isiPasswordAcak('new_password')" class="btn btn-secondary shrink-0" title="Buat password acak"><i data-lucide="dices" class="!w-4 !h-4"></i> Acak</button>
+                    </div>
+                    <p class="bantuan">Login API lama akun ini akan dikeluarkan.</p>
                 </div>
             </div>
             <div class="modal-kaki">
@@ -198,8 +221,51 @@
     </div>
 </div>
 
+<!-- ==================== MODAL EDIT PENGGUNA ==================== -->
+<div id="modalEditPengguna" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="judulEditPengguna">
+    <div class="modal-panel max-w-md">
+        <div class="modal-kepala">
+            <h3 id="judulEditPengguna" class="kartu-judul">Edit Pengguna</h3>
+            <button type="button" onclick="closeModalEdit()" class="btn btn-ghost btn-sm" aria-label="Tutup"><i data-lucide="x"></i></button>
+        </div>
+
+        <form id="formEditPengguna" method="POST" action="{{ old('_form') === 'edit' && old('_user_id') ? route('owner.pengguna.update', old('_user_id')) : '' }}">
+            @csrf
+            <input type="hidden" name="_form" value="edit">
+            <input type="hidden" name="_user_id" id="editUserId" value="{{ old('_form') === 'edit' ? old('_user_id') : '' }}">
+            <div class="modal-isi space-y-4">
+                <div>
+                    <label for="edit_name" class="label">Nama lengkap</label>
+                    <input type="text" name="name" id="edit_name" value="{{ old('_form') === 'edit' ? old('name') : '' }}" required maxlength="100" class="field">
+                </div>
+                <div>
+                    <label for="edit_username" class="label">Username</label>
+                    <input type="text" name="username" id="edit_username" value="{{ old('_form') === 'edit' ? old('username') : '' }}" required minlength="3" maxlength="50" pattern="[A-Za-z0-9._\-]+" class="field" autocomplete="off">
+                    <p class="bantuan">Jika diganti, pemilik akun masuk dengan username baru.</p>
+                </div>
+                <div>
+                    <label for="edit_role" class="label">Peran</label>
+                    <select name="role" id="edit_role" required class="field">
+                        @foreach(['kasir' => 'Kasir', 'dapur' => 'Dapur', 'owner' => 'Owner'] as $kode => $label)
+                            <option value="{{ $kode }}" {{ old('_form') === 'edit' && old('role') === $kode ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" name="role" id="edit_role_tetap" value="owner" disabled>
+                    <p id="catatanPeranSendiri" class="bantuan hidden">Peran akun Anda sendiri tidak bisa diubah.</p>
+                </div>
+            </div>
+            <div class="modal-kaki">
+                <button type="button" onclick="closeModalEdit()" class="btn btn-secondary">Batal</button>
+                <button type="submit" class="btn btn-primary" data-loading-text="Menyimpan…"><i data-lucide="check"></i> Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    const idSaya = '{{ Auth::id() }}';
+
     function openModalTambahPengguna() {
         document.getElementById('modalTambahPengguna').classList.remove('hidden');
         document.getElementById('name').focus();
@@ -207,19 +273,66 @@
     function closeModalTambahPengguna() {
         document.getElementById('modalTambahPengguna').classList.add('hidden');
     }
-    function openModalReset(userId, name) {
-        document.getElementById('resetUserName').textContent = name;
-        document.getElementById('formResetPass').action = `/owner/pengguna/${userId}/reset`;
+
+    function aturPeranSendiri(sendiri) {
+        document.getElementById('edit_role').disabled = sendiri;
+        document.getElementById('edit_role_tetap').disabled = !sendiri;
+        document.getElementById('catatanPeranSendiri').classList.toggle('hidden', !sendiri);
+    }
+    function openModalEdit(tombol) {
+        const d = tombol.dataset;
+        document.getElementById('formEditPengguna').action = d.url;
+        document.getElementById('editUserId').value = d.id;
+        document.getElementById('edit_name').value = d.name;
+        document.getElementById('edit_username').value = d.username;
+        document.getElementById('edit_role').value = d.role;
+        aturPeranSendiri(d.self === '1');
+        document.getElementById('modalEditPengguna').classList.remove('hidden');
+        document.getElementById('edit_name').focus();
+    }
+    function closeModalEdit() {
+        document.getElementById('modalEditPengguna').classList.add('hidden');
+    }
+
+    function openModalReset(tombol) {
+        document.getElementById('resetUserName').textContent = tombol.dataset.name;
+        document.getElementById('resetUserId').value = tombol.dataset.id;
+        document.getElementById('formResetPass').action = tombol.dataset.url;
+        document.getElementById('new_password').value = '';
         document.getElementById('modalResetPass').classList.remove('hidden');
-        document.getElementById('new_password').select();
+        document.getElementById('new_password').focus();
     }
     function closeModalReset() {
         document.getElementById('modalResetPass').classList.add('hidden');
     }
+
+    // Password acak 10 karakter tanpa huruf yang mirip (0/O, 1/l/I)
+    function isiPasswordAcak(idInput) {
+        const huruf = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const acak = crypto.getRandomValues(new Uint32Array(10));
+        const input = document.getElementById(idInput);
+        input.value = Array.from(acak, n => huruf[n % huruf.length]).join('');
+        input.select();
+    }
+
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeModalTambahPengguna(); closeModalReset(); }
+        if (e.key === 'Escape') { closeModalTambahPengguna(); closeModalEdit(); closeModalReset(); }
     });
     document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }));
+
+    // Validasi server gagal: buka lagi modal yang tadi dipakai
+    @if($errors->any())
+        @switch(old('_form'))
+            @case('tambah') openModalTambahPengguna(); @break
+            @case('edit')
+                aturPeranSendiri(document.getElementById('editUserId').value === idSaya);
+                document.getElementById('modalEditPengguna').classList.remove('hidden');
+                @break
+            @case('reset')
+                document.getElementById('modalResetPass').classList.remove('hidden');
+                @break
+        @endswitch
+    @endif
 </script>
 @endpush
 @endsection

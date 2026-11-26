@@ -43,6 +43,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     // Frame 8: Pengguna & Hak Akses
     Route::get('/pengguna', [OwnerController::class, 'pengguna'])->name('owner.pengguna');
     Route::post('/pengguna', [OwnerController::class, 'storePengguna'])->name('owner.pengguna.store');
+    Route::post('/pengguna/{user}', [OwnerController::class, 'updatePengguna'])->name('owner.pengguna.update');
     Route::post('/pengguna/{user}/toggle', [OwnerController::class, 'toggleStatusPengguna'])->name('owner.pengguna.toggle');
     Route::post('/pengguna/{user}/reset', [OwnerController::class, 'resetPasswordPengguna'])->name('owner.pengguna.reset');
 

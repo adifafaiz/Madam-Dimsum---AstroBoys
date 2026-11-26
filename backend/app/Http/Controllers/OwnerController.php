@@ -903,6 +903,49 @@ class OwnerController extends Controller
         return view('owner.pengguna', compact('users'));
     }
 
+    /** Aturan & pesan validasi data akun (tambah dan edit). */
+    private function aturanPengguna(?int $abaikanId = null): array
+    {
+        $unik = 'unique:users,username' . ($abaikanId ? ',' . $abaikanId : '');
+
+        return [
+            [
+                'name' => ['required', 'string', 'max:100'],
+                'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z0-9._-]+$/', $unik],
+                'role' => ['required', 'in:owner,kasir,dapur'],
+            ],
+            [
+                'name.required' => 'Nama lengkap pengguna wajib diisi.',
+                'name.max' => 'Nama maksimal 100 karakter.',
+                'username.required' => 'Username wajib diisi.',
+                'username.min' => 'Username minimal 3 karakter.',
+                'username.max' => 'Username maksimal 50 karakter.',
+                'username.regex' => 'Username hanya boleh huruf, angka, titik, garis bawah, atau tanda minus (tanpa spasi).',
+                'username.unique' => 'Username sudah digunakan, silakan pilih username lain.',
+                'role.required' => 'Peran wajib dipilih.',
+                'role.in' => 'Peran harus Owner, Kasir, atau Dapur.',
+            ],
+        ];
+    }
+
+    private function aturanPassword(): array
+    {
+        return [
+            ['password' => ['required', 'string', 'min:6', 'max:72']],
+            [
+                'password.required' => 'Password wajib diisi.',
+                'password.min' => 'Password minimal 6 karakter.',
+                'password.max' => 'Password maksimal 72 karakter.',
+            ],
+        ];
+    }
+
+    /** Masih adakah owner aktif lain selain $user? Mencegah sistem terkunci tanpa owner. */
+    private function adaOwnerAktifLain(\App\Models\User $user): bool
+    {
+        return \App\Models\User::where('role', 'owner')->where('is_active', true)->where('id', '!=', $user->id)->exists();
+    }
+
     /**
      * Frame 8: Tambah Pengguna Baru (FR-29)
      */
@@ -910,22 +953,14 @@ class OwnerController extends Controller
     {
         $this->checkOwnerAccess();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:50|unique:users,username',
-            'password' => 'required|string|min:6',
-            'role' => 'required|in:owner,kasir,dapur',
-        ], [
-            'name.required' => 'Nama lengkap pengguna wajib diisi.',
-            'username.required' => 'Username wajib diisi.',
-            'username.unique' => 'Username sudah digunakan, silakan pilih username lain.',
-            'password.min' => 'Password minimal 6 karakter.',
-            'role.required' => 'Peran (Role) wajib dipilih.',
-        ]);
+        $request->merge(['username' => trim((string) $request->input('username'))]);
+        [$aturan, $pesan] = $this->aturanPengguna();
+        [$aturanPw, $pesanPw] = $this->aturanPassword();
+        $validated = $request->validate($aturan + $aturanPw, $pesan + $pesanPw);
 
         $user = \App\Models\User::create([
-            'name' => $validated['name'],
-            'username' => trim($validated['username']),
+            'name' => trim($validated['name']),
+            'username' => $validated['username'],
             'password' => bcrypt($validated['password']),
             'role' => $validated['role'],
             'is_active' => true,
@@ -936,11 +971,61 @@ class OwnerController extends Controller
             'aksi' => 'tambah_pengguna',
             'tabel' => 'users',
             'data_lama' => null,
-            'data_baru' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
+            'data_baru' => ['id' => $user->id, 'name' => $user->name, 'username' => $user->username, 'role' => $user->role],
             'waktu' => Carbon::now(),
         ]);
 
         return redirect()->route('owner.pengguna')->with('success', "Pengguna '{$user->name}' berhasil ditambahkan!");
+    }
+
+    /**
+     * Frame 8: Edit Pengguna - nama, username, peran (FR-29, BR-11)
+     */
+    public function updatePengguna(Request $request, \App\Models\User $user)
+    {
+        $this->checkOwnerAccess();
+
+        $request->merge(['username' => trim((string) $request->input('username'))]);
+        [$aturan, $pesan] = $this->aturanPengguna($user->id);
+        $validated = $request->validate($aturan, $pesan);
+
+        if ($user->role === 'owner' && $validated['role'] !== 'owner') {
+            if ($user->id === Auth::id()) {
+                return back()->withErrors(['role' => 'Anda tidak dapat mengubah peran akun Anda sendiri.'])->withInput();
+            }
+            if ($user->is_active && ! $this->adaOwnerAktifLain($user)) {
+                return back()->withErrors(['role' => 'Harus ada minimal satu owner aktif.'])->withInput();
+            }
+        }
+
+        $lama = $user->only(['name', 'username', 'role']);
+        $user->fill([
+            'name' => trim($validated['name']),
+            'username' => $validated['username'],
+            'role' => $validated['role'],
+        ]);
+
+        if (! $user->isDirty()) {
+            return redirect()->route('owner.pengguna')->with('success', 'Tidak ada perubahan pada akun ' . $user->name . '.');
+        }
+
+        $user->save();
+
+        // Peran berubah: token API lama dicabut supaya hak akses lama tidak terbawa
+        if ($lama['role'] !== $user->role) {
+            $user->tokens()->delete();
+        }
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'aksi' => 'ubah_pengguna',
+            'tabel' => 'users',
+            'data_lama' => ['id' => $user->id] + $lama,
+            'data_baru' => ['id' => $user->id] + $user->only(['name', 'username', 'role']),
+            'waktu' => Carbon::now(),
+        ]);
+
+        return redirect()->route('owner.pengguna')->with('success', "Akun '{$user->name}' berhasil diperbarui.");
     }
 
     /**
@@ -954,22 +1039,29 @@ class OwnerController extends Controller
         if ($user->id === Auth::id()) {
             return back()->withErrors(['error' => 'Anda tidak dapat menonaktifkan akun Anda sendiri.']);
         }
+        if ($user->is_active && $user->role === 'owner' && ! $this->adaOwnerAktifLain($user)) {
+            return back()->withErrors(['error' => 'Harus ada minimal satu owner aktif.']);
+        }
 
         $user->is_active = !$user->is_active;
         $user->save();
 
-        $statusText = $user->is_active ? 'diaktifkan kembali' : 'dinonaktifkan (UAT-10)';
+        if (! $user->is_active) {
+            $user->tokens()->delete();
+        }
+
+        $statusText = $user->is_active ? 'diaktifkan kembali' : 'dinonaktifkan';
 
         ActivityLog::create([
             'user_id' => Auth::id(),
             'aksi' => 'ubah_status_pengguna',
             'tabel' => 'users',
-            'data_lama' => ['is_active' => !$user->is_active],
-            'data_baru' => ['is_active' => $user->is_active],
+            'data_lama' => ['id' => $user->id, 'is_active' => !$user->is_active],
+            'data_baru' => ['id' => $user->id, 'is_active' => $user->is_active],
             'waktu' => Carbon::now(),
         ]);
 
-        return redirect()->route('owner.pengguna')->with('success', "Akun '{$user->name}' berhasil {$statusText}!");
+        return redirect()->route('owner.pengguna')->with('success', "Akun '{$user->name}' berhasil {$statusText}.");
     }
 
     /**
@@ -979,20 +1071,25 @@ class OwnerController extends Controller
     {
         $this->checkOwnerAccess();
 
-        $newPassword = $request->input('password', 'password123');
-        $user->password = bcrypt($newPassword);
+        [$aturanPw, $pesanPw] = $this->aturanPassword();
+        $validated = $request->validate($aturanPw, $pesanPw);
+
+        $user->password = bcrypt($validated['password']);
         $user->save();
+
+        // Sesi API lama tidak berlaku lagi setelah password diganti
+        $user->tokens()->delete();
 
         ActivityLog::create([
             'user_id' => Auth::id(),
             'aksi' => 'reset_password',
             'tabel' => 'users',
             'data_lama' => null,
-            'data_baru' => ['username' => $user->username],
+            'data_baru' => ['id' => $user->id, 'username' => $user->username],
             'waktu' => Carbon::now(),
         ]);
 
-        return redirect()->route('owner.pengguna')->with('success', "Password akun '{$user->name}' berhasil di-reset menjadi '{$newPassword}'.");
+        return redirect()->route('owner.pengguna')->with('success', "Password akun '{$user->name}' berhasil diganti. Sampaikan password baru langsung ke pemilik akun.");
     }
 
     /**
